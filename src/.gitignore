@@ -1,0 +1,10 @@
+# Ignore large models and training files
+models/
+results/
+reports/
+
+# Python / Environment junk
+__pycache__/
+venv/
+.env
+*.pyc
