@@ -1,0 +1,2 @@
+observations,columns,validation_errors,validation_warnings,duplicate_rows,total_missing_values,status
+20640,10,0,1,0,207,PASSED WITH WARNINGS

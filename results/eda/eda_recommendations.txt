@@ -1,0 +1,5 @@
+- The target is right-skewed. Explore transformation only if it improves validation performance or model adequacy.
+- The strongest observed linear relationship is median_income (correlation=0.6879).
+- Potential extreme values exceed 5% in: total_rooms, total_bedrooms, households, population, median_house_value. Retain them for predictive modelling unless domain evidence supports removal; use sensitivity analysis for inference.
+- Missing values remain in: total_bedrooms. Fit imputation on training data only.
+- Correlation measures association and does not establish causality.

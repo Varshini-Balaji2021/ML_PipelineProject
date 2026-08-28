@@ -1,0 +1,14 @@
+DATA UNDERSTANDING SUMMARY
+======================================================================
+Observations: 14448
+Variables: 10
+Missing values: 140
+Duplicate rows: 0
+Recommendations:
+- Missing values are present in: total_bedrooms. Treat them only after the training split.
+- Logical checks requiring review: households_above_population.
+- No data were modified during data understanding.
+
+Outputs: C:\Users\varsh\OneDrive\Attachments\Desktop\ML_Pipelineproject\results\data_understanding
+No observations or values were modified.
+======================================================================

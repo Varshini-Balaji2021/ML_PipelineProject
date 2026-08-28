@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+>
+<title>Feature Engineering Plan</title>
+<style>
+    :root {
+        --navy: #16324f;
+        --teal: #2b7a78;
+        --blue: #2d6a8a;
+        --gold: #c6922e;
+        --green: #4f772d;
+        --light: #f4f7f9;
+        --border: #d8e1e7;
+        --text: #1f2933;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+        margin: 0;
+        font-family: "Segoe UI", Arial, sans-serif;
+        background: #eaf0f4;
+        color: var(--text);
+        line-height: 1.55;
+    }
+
+    .page {
+        max-width: 1500px;
+        margin: auto;
+        padding: 30px;
+    }
+
+    .hero {
+        padding: 32px;
+        color: white;
+        border-radius: 17px;
+        background:
+            linear-gradient(
+                135deg,
+                var(--navy),
+                var(--teal)
+            );
+    }
+
+    .hero h1 {
+        margin-top: 0;
+    }
+
+    .summary-grid {
+        display: grid;
+        grid-template-columns:
+            repeat(
+                auto-fit,
+                minmax(160px, 1fr)
+            );
+        gap: 12px;
+        margin-top: 20px;
+    }
+
+    .summary-card {
+        padding: 16px;
+        color: white;
+        border-radius: 11px;
+        background: var(--blue);
+    }
+
+    .card-number {
+        font-size: 1.6rem;
+        font-weight: 700;
+    }
+
+    .section {
+        margin-top: 22px;
+        padding: 24px;
+        background: white;
+        border-radius: 14px;
+        box-shadow:
+            0 4px 14px
+            rgba(0,0,0,.06);
+    }
+
+    .section h2 {
+        margin-top: 0;
+        color: var(--navy);
+        border-bottom:
+            3px solid
+            var(--teal);
+        padding-bottom: 8px;
+    }
+
+    .principles {
+        background: #fff7db;
+        border-left:
+            5px solid
+            var(--gold);
+        padding: 16px;
+        border-radius: 9px;
+    }
+
+    .workflow {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .step {
+        padding: 10px 13px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--light);
+        font-weight: 600;
+    }
+
+    .arrow {
+        color: var(--teal);
+        font-size: 1.25rem;
+    }
+
+    .table-wrap {
+        overflow-x: auto;
+    }
+
+    table.data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: .82rem;
+    }
+
+    .data-table th {
+        padding: 8px;
+        color: white;
+        background: var(--navy);
+        text-align: left;
+        white-space: nowrap;
+    }
+
+    .data-table td {
+        padding: 8px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+    }
+
+    .data-table tr:nth-child(even) {
+        background: #f8fafb;
+    }
+
+    @media print {
+        body {
+            background: white;
+        }
+
+        .section {
+            box-shadow: none;
+        }
+    }
+    </style>
+</head>
+<body>
+<div class="page">
+
+<section class="hero">
+<h1>Feature Engineering Plan</h1>
+<p>
+This document converts EDA findings into a governed repository of
+proposed deterministic, domain, statistical, machine-learning, and
+inferential features.
+</p>
+
+<div class="summary-grid">
+
+            <div class="summary-card">
+                <div class="card-number">11</div>
+                <div class="card-label">Statistical</div>
+            </div>
+            
+            <div class="summary-card">
+                <div class="card-number">6</div>
+                <div class="card-label">Deterministic</div>
+            </div>
+            
+            <div class="summary-card">
+                <div class="card-number">4</div>
+                <div class="card-label">Machine Learning</div>
+            </div>
+            
+            <div class="summary-card">
+                <div class="card-number">3</div>
+                <div class="card-label">Domain</div>
+            </div>
+            
+            <div class="summary-card">
+                <div class="card-number">3</div>
+                <div class="card-label">Inferential</div>
+            </div>
+            
+</div>
+</section>
+
+<section class="section">
+<h2>Feature Engineering Governance</h2>
+<div class="principles">
+<ol>
+<li>EDA proposes features; it does not automatically approve all of them.</li>
+<li>Deterministic ratios may be executed when mathematical rules are valid.</li>
+<li>Domain features require subject-matter approval.</li>
+<li>Statistical and interaction features remain hypotheses.</li>
+<li>ML transformations must be fitted on training data only.</li>
+<li>Inferential features must satisfy interpretation and estimability requirements.</li>
+<li>The test set must never determine feature creation or selection.</li>
+</ol>
+</div>
+</section>
+
+<section class="section">
+<h2>Planned Workflow</h2>
+<div class="workflow">
+<div class="step">EDA Findings</div>
+<div class="arrow">→</div>
+<div class="step">Feature Engineering Plan</div>
+<div class="arrow">→</div>
+<div class="step">Analyst Approval</div>
+<div class="arrow">→</div>
+<div class="step">Feature Repository</div>
+<div class="arrow">→</div>
+<div class="step">Model-Specific Selection</div>
+<div class="arrow">→</div>
+<div class="step">Model Development</div>
+</div>
+</section>
+
+<section class="section">
+<h2>Feature Repository</h2>
+<div class="table-wrap">
+<table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>feature_id</th>
+      <th>feature_name</th>
+      <th>feature_group</th>
+      <th>feature_subtype</th>
+      <th>source_columns</th>
+      <th>business_meaning</th>
+      <th>creation_status</th>
+      <th>used_by_machine_learning</th>
+      <th>used_by_inference</th>
+      <th>used_by_optimization</th>
+      <th>used_by_grey_models</th>
+      <th>requires_training_fit</th>
+      <th>implementation_module</th>
+      <th>priority</th>
+      <th>analyst_decision</th>
+      <th>repository_status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>FEAT-001</td>
+      <td>bedrooms_per_household</td>
+      <td>Deterministic</td>
+      <td>Ratio</td>
+      <td>total_bedrooms | households</td>
+      <td>Average bedroom availability per household.</td>
+      <td>AUTOMATIC CANDIDATE</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>deterministic_features.py</td>
+      <td>HIGH</td>
+      <td>APPROVE FOR IMPLEMENTATION</td>
+      <td>PLANNED</td>
+    </tr>
+    <tr>
+      <td>FEAT-002</td>
+      <td>bedrooms_per_person</td>
+      <td>Deterministic</td>
+      <td>Ratio</td>
+      <td>total_bedrooms | population</td>
+      <td>Bedroom availability per person.</td>
+      <td>AUTOMATIC CANDIDATE</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>deterministic_features.py</td>
+      <td>HIGH</td>
+      <td>APPROVE FOR IMPLEMENTATION</td>
+      <td>PLANNED</td>
+    </tr>
+    <tr>
+      <td>FEAT-003</td>
+      <td>bedrooms_per_room</td>
+      <td>Deterministic</td>
+      <td>Ratio</td>
+      <td>total_bedrooms | total_rooms</td>
+      <td>Bedroom share within the housing stock.</td>
+      <td>AUTOMATIC CANDIDATE</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>deterministic_features.py</td>
+      <td>HIGH</td>
+      <td>APPROVE FOR IMPLEMENTATION</td>
+      <td>PLANNED</td>
+    </tr>
+    <tr>
+      <td>FEAT-004</td>
+      <td>population_per_household</td>
+      <td>Deterministic</td>
+      <td>Ratio</td>
+      <td>population | households</td>
+      <td>Average household occupancy.</td>
+      <td>AUTOMATIC CANDIDATE</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>deterministic_features.py</td>
+      <td>HIGH</td>
+      <td>APPROVE FOR IMPLEMENTATION</td>
+      <td>PLANNED</td>
+    </tr>
+    <tr>
+      <td>FEAT-005</td>
+      <td>rooms_per_household</td>
+      <td>Deterministic</td>
+      <td>Ratio</td>
+      <td>total_rooms | households</td>
+      <td>Average housing-space availability per household.</td>
+      <td>AUTOMATIC CANDIDATE</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>deterministic_features.py</td>
+      <td>HIGH</td>
+      <td>APPROVE FOR IMPLEMENTATION</td>
+      <td>PLANNED</td>
+    </tr>
+    <tr>
+      <td>FEAT-006</td>
+      <td>rooms_per_person</td>
+      <td>Deterministic</td>
+      <td>Ratio</td>
+      <td>total_rooms | population</td>
+      <td>Housing-space availability per person.</td>
+      <td>AUTOMATIC CANDIDATE</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>deterministic_features.py</td>
+      <td>HIGH</td>
+      <td>APPROVE FOR IMPLEMENTATION</td>
+      <td>PLANNED</td>
+    </tr>
+    <tr>
+      <td>FEAT-007</td>
+      <td>coastal_access_group</td>
+      <td>Domain</td>
+      <td>Category consolidation</td>
+      <td>ocean_proximity</td>
+      <td>Simplified market-access or coastal-amenity segment.</td>
+      <td>OPTIONAL DOMAIN CANDIDATE</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>domain_features.py</td>
+      <td>LOW</td>
+      <td>REQUIRES DOMAIN APPROVAL</td>
+      <td>PLANNED</td>
+    </tr>
+    <tr>
+      <td>FEAT-008</td>
+      <td>distance_to_business_centre</td>
+      <td>Domain</td>
+      <td>External geographic feature</td>
+      <td>longitude | latitude | external_cbd_coordinates</td>
+      <td>Accessibility to major employment and commercial centres.</td>
+      <td>EXTERNAL DATA REQUIRED</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>domain_features.py</td>
+      <td>LOW</td>
+      <td>DEFER UNTIL EXTERNAL DATA AVAILABLE</td>
+      <td>PLANNED</td>
+    </tr>
+    <tr>
+      <td>FEAT-009</td>
+      <td>local_amenity_index</td>
+      <td>Domain</td>
+      <td>External composite index</td>
+      <td>external_amenity_data</td>
+      <td>Local access to schools, services, transport, and amenities.</td>
+      <td>EXTERNAL DATA REQUIRED</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>domain_features.py</td>
+      <td>LOW</td>
+      <td>DEFER UNTIL EXTERNAL DATA AVAILABLE</td>
+      <td>PLANNED</td>
+    </tr>
+    <tr>
+      <td>FEAT-010</td>
+      <td>latitude_squared</td>
+      <td>Statistical</td>
+      <td>Polynomial term</td>
+      <td>latitude</td>
+      <td>Allows the marginal relationship of latitude to change with its level.</td>
+      <td>MODEL-SPECIFICATION CANDIDATE</td>
+      <td>False</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>statistical_features.py</td>
+      <td>HIGH</td>
+      <td>EVALUATE, DO NOT IMPOSE</td>
+      <td>PLANNED</td>
+    </tr>
+    <tr>
+      <td>FEAT-011</td>
+      <td>longitude_squared</td>
+      <td>Statistical</td>
+      <td>Polynomial term</td>
+      <td>longitude</td>
+      <td>Allows the marginal relationship of longitude to change with its level.</td>
+      <td>MODEL-SPECIFICATION CANDIDATE</td>
+      <td>False</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>statistical_features.py</td>
+      <td>HIGH</td>
+      <td>EVALUATE, DO NOT IMPOSE</td>
+      <td>PLANNED</td>
+    </tr>
+    <tr>
+      <td>FEAT-012</td>
+      <td>households_squared</td>
+      <td>Statistical</td>
+      <td>Polynomial term</td>
+      <td>households</td>
+      <td>Allows the marginal relationship of households to change with its level.</td>
+      <td>MODEL-SPECIFICATION CANDIDATE</td>
+      <td>False</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>statistical_features.py</td>
+      <td>MEDIUM</td>
+      <td>EVALUATE, DO NOT IMPOSE</td>
+      <td>PLANNED</td>
+    </tr>
+    <tr>
+      <td>FEAT-013</td>
+      <td>housing_median_age_squared</td>
+      <td>Statistical</td>
+      <td>Polynomial term</td>
+      <td>housing_median_age</td>
+      <td>Allows the marginal relationship of housing_median_age to change with its level.</td>
+      <td>MODEL-SPECIFICATION CANDIDATE</td>
+      <td>False</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>statistical_features.py</td>
+      <td>MEDIUM</td>
+      <td>EVALUATE, DO NOT IMPOSE</td>
+      <td>PLANNED</td>
+    </tr>
+    <tr>
+      <td>FEAT-014</td>
+      <td>income_age_interaction</td>
+      <td>Statistical</td>
+      <td>Interaction</td>
+      <td>median_income | housing_median_age</td>
+      <td>Tests whether the relationship between income and the response varies with housing age.</td>
+      <td>HYPOTHESIS CANDIDATE</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>statistical_features.py</td>
+      <td>MEDIUM</td>
+      <td>EVALUATE, DO NOT IMPOSE</td>
+      <td>PLANNED</td>
+    </tr>
+    <tr>
+      <td>FEAT-015</td>
+      <td>income_ocean_proximity_interaction</td>
+      <td>Statistical</td>
+      <td>Interaction</td>
+      <td>median_income | ocean_proximity</td>
+      <td>Allows the income relationship to differ across location categories.</td>
+      <td>HYPOTHESIS CANDIDATE</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>statistical_features.py</td>
+      <td>MEDIUM</td>
+      <td>EVALUATE, DO NOT IMPOSE</td>
+      <td>PLANNED</td>
+    </tr>
+    <tr>
+      <td>FEAT-016</td>
+      <td>longitude_latitude_interaction</td>
+      <td>Statistical</td>
+      <td>Interaction</td>
+      <td>longitude | latitude</td>
+      <td>Joint geographic effect.</td>
+      <td>HYPOTHESIS CANDIDATE</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>statistical_features.py</td>
+      <td>MEDIUM</td>
+      <td>EVALUATE, DO NOT IMPOSE</td>
+      <td>PLANNED</td>
+    </tr>
+    <tr>
+      <td>FEAT-017</td>
+      <td>median_income_squared</td>
+      <td>Statistical</td>
+      <td>Polynomial term</td>
+      <td>median_income</td>
+      <td>Allows the marginal relationship of median_income to change with its level.</td>
+      <td>MODEL-SPECIFICATION CANDIDATE</td>
+      <td>False</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>statistical_features.py</td>
+      <td>MEDIUM</td>
+      <td>EVALUATE, DO NOT IMPOSE</td>
+      <td>PLANNED</td>
+    </tr>
+    <tr>
+      <td>FEAT-018</td>
+      <td>population_squared</td>
+      <td>Statistical</td>
+      <td>Polynomial term</td>
+      <td>population</td>
+      <td>Allows the marginal relationship of population to change with its level.</td>
+      <td>MODEL-SPECIFICATION CANDIDATE</td>
+      <td>False</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>statistical_features.py</td>
+      <td>MEDIUM</td>
+      <td>EVALUATE, DO NOT IMPOSE</td>
+      <td>PLANNED</td>
+    </tr>
+    <tr>
+      <td>FEAT-019</td>
+      <td>total_bedrooms_squared</td>
+      <td>Statistical</td>
+      <td>Polynomial term</td>
+      <td>total_bedrooms</td>
+      <td>Allows the marginal relationship of total_bedrooms to change with its level.</td>
+      <td>MODEL-SPECIFICATION CANDIDATE</td>
+      <td>False</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>statistical_features.py</td>
+      <td>MEDIUM</td>
+      <td>EVALUATE, DO NOT IMPOSE</td>
+      <td>PLANNED</td>
+    </tr>
+    <tr>
+      <td>FEAT-020</td>
+      <td>total_rooms_squared</td>
+      <td>Statistical</td>
+      <td>Polynomial term</td>
+      <td>total_rooms</td>
+      <td>Allows the marginal relationship of total_rooms to change with its level.</td>
+      <td>MODEL-SPECIFICATION CANDIDATE</td>
+      <td>False</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>statistical_features.py</td>
+      <td>MEDIUM</td>
+      <td>EVALUATE, DO NOT IMPOSE</td>
+      <td>PLANNED</td>
+    </tr>
+    <tr>
+      <td>FEAT-021</td>
+      <td>one_hot_categorical_predictors</td>
+      <td>Machine Learning</td>
+      <td>Categorical encoding</td>
+      <td>ocean_proximity</td>
+      <td>Represents categorical differences without imposing numerical ordering.</td>
+      <td>MANDATORY FOR ML PIPELINE</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>ml_features.py</td>
+      <td>HIGH</td>
+      <td>APPROVE FOR ML</td>
+      <td>PLANNED</td>
+    </tr>
+    <tr>
+      <td>FEAT-022</td>
+      <td>standardized_numeric_predictors</td>
+      <td>Machine Learning</td>
+      <td>Scaling</td>
+      <td>longitude | latitude | housing_median_age | total_rooms | total_bedrooms | population | households | median_income</td>
+      <td>Places numerical predictors on comparable scales.</td>
+      <td>MANDATORY FOR SGD PIPELINE</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>ml_features.py</td>
+      <td>HIGH</td>
+      <td>APPROVE FOR ML</td>
+      <td>PLANNED</td>
+    </tr>
+    <tr>
+      <td>FEAT-023</td>
+      <td>polynomial_feature_expansion</td>
+      <td>Machine Learning</td>
+      <td>Polynomial representation</td>
+      <td>longitude | latitude | housing_median_age | total_rooms | total_bedrooms | population | households | median_income</td>
+      <td>Flexible predictive representation of curvature and interactions.</td>
+      <td>OPTIONAL VALIDATION CANDIDATE</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>ml_features.py</td>
+      <td>LOW</td>
+      <td>DEFER UNTIL BASELINE VALIDATION</td>
+      <td>PLANNED</td>
+    </tr>
+    <tr>
+      <td>FEAT-024</td>
+      <td>spline_basis_for_prediction</td>
+      <td>Machine Learning</td>
+      <td>Spline representation</td>
+      <td>longitude | latitude | housing_median_age | total_rooms | total_bedrooms | population | households | median_income</td>
+      <td>Flexible smooth predictive relationships.</td>
+      <td>OPTIONAL VALIDATION CANDIDATE</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>ml_features.py</td>
+      <td>LOW</td>
+      <td>DEFER UNTIL BASELINE VALIDATION</td>
+      <td>PLANNED</td>
+    </tr>
+    <tr>
+      <td>FEAT-025</td>
+      <td>orthogonal_polynomial_terms</td>
+      <td>Inferential</td>
+      <td>Orthogonal polynomial</td>
+      <td>longitude | latitude | housing_median_age | total_rooms | total_bedrooms | population | households | median_income</td>
+      <td>Represents curvature while reducing collinearity among polynomial terms.</td>
+      <td>MODEL-SPECIFICATION CANDIDATE</td>
+      <td>False</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>inference_features.py</td>
+      <td>LOW</td>
+      <td>DEFER UNTIL OLS SPECIFICATION TEST</td>
+      <td>PLANNED</td>
+    </tr>
+    <tr>
+      <td>FEAT-026</td>
+      <td>centered_numeric_predictors</td>
+      <td>Inferential</td>
+      <td>Centering</td>
+      <td>longitude | latitude | housing_median_age | total_rooms | total_bedrooms | population | households | median_income</td>
+      <td>Makes the intercept and interaction terms more interpretable.</td>
+      <td>OPTIONAL INFERENTIAL CANDIDATE</td>
+      <td>False</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>inference_features.py</td>
+      <td>MEDIUM</td>
+      <td>USE WHEN POLYNOMIAL OR INTERACTION TERMS ENTER</td>
+      <td>PLANNED</td>
+    </tr>
+    <tr>
+      <td>FEAT-027</td>
+      <td>interpretable_spline_basis</td>
+      <td>Inferential</td>
+      <td>Spline basis</td>
+      <td>longitude | latitude | median_income</td>
+      <td>Captures smooth nonlinear relationships while preserving interpretable effect plots.</td>
+      <td>GAM / SPLINE CANDIDATE</td>
+      <td>False</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>inference_features.py</td>
+      <td>MEDIUM</td>
+      <td>DEFER UNTIL LINEAR AND POLYNOMIAL ASSESSMENT</td>
+      <td>PLANNED</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</section>
+
+
+            <section class="section" id="deterministic">
+                <h2>Deterministic Features</h2>
+                <div class="table-wrap">
+                    <table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>feature_name</th>
+      <th>feature_group</th>
+      <th>feature_subtype</th>
+      <th>source_columns</th>
+      <th>formula_or_method</th>
+      <th>business_meaning</th>
+      <th>analytical_rationale</th>
+      <th>creation_status</th>
+      <th>used_by_machine_learning</th>
+      <th>used_by_inference</th>
+      <th>used_by_optimization</th>
+      <th>used_by_grey_models</th>
+      <th>requires_training_fit</th>
+      <th>validation_rule</th>
+      <th>leakage_risk</th>
+      <th>implementation_module</th>
+      <th>priority</th>
+      <th>analyst_decision</th>
+      <th>notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>bedrooms_per_household</td>
+      <td>Deterministic</td>
+      <td>Ratio</td>
+      <td>total_bedrooms | households</td>
+      <td>total_bedrooms / households</td>
+      <td>Average bedroom availability per household.</td>
+      <td>Separates observational-unit scale from density, composition, or resource availability.</td>
+      <td>AUTOMATIC CANDIDATE</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>Denominator must be non-zero; preserve missing values.</td>
+      <td>LOW</td>
+      <td>deterministic_features.py</td>
+      <td>HIGH</td>
+      <td>APPROVE FOR IMPLEMENTATION</td>
+      <td>No zero denominators detected in training data.</td>
+    </tr>
+    <tr>
+      <td>bedrooms_per_person</td>
+      <td>Deterministic</td>
+      <td>Ratio</td>
+      <td>total_bedrooms | population</td>
+      <td>total_bedrooms / population</td>
+      <td>Bedroom availability per person.</td>
+      <td>Separates observational-unit scale from density, composition, or resource availability.</td>
+      <td>AUTOMATIC CANDIDATE</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>Denominator must be non-zero; preserve missing values.</td>
+      <td>LOW</td>
+      <td>deterministic_features.py</td>
+      <td>HIGH</td>
+      <td>APPROVE FOR IMPLEMENTATION</td>
+      <td>No zero denominators detected in training data.</td>
+    </tr>
+    <tr>
+      <td>bedrooms_per_room</td>
+      <td>Deterministic</td>
+      <td>Ratio</td>
+      <td>total_bedrooms | total_rooms</td>
+      <td>total_bedrooms / total_rooms</td>
+      <td>Bedroom share within the housing stock.</td>
+      <td>Separates observational-unit scale from density, composition, or resource availability.</td>
+      <td>AUTOMATIC CANDIDATE</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>Denominator must be non-zero; preserve missing values.</td>
+      <td>LOW</td>
+      <td>deterministic_features.py</td>
+      <td>HIGH</td>
+      <td>APPROVE FOR IMPLEMENTATION</td>
+      <td>No zero denominators detected in training data.</td>
+    </tr>
+    <tr>
+      <td>population_per_household</td>
+      <td>Deterministic</td>
+      <td>Ratio</td>
+      <td>population | households</td>
+      <td>population / households</td>
+      <td>Average household occupancy.</td>
+      <td>Separates observational-unit scale from density, composition, or resource availability.</td>
+      <td>AUTOMATIC CANDIDATE</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>Denominator must be non-zero; preserve missing values.</td>
+      <td>LOW</td>
+      <td>deterministic_features.py</td>
+      <td>HIGH</td>
+      <td>APPROVE FOR IMPLEMENTATION</td>
+      <td>No zero denominators detected in training data.</td>
+    </tr>
+    <tr>
+      <td>rooms_per_household</td>
+      <td>Deterministic</td>
+      <td>Ratio</td>
+      <td>total_rooms | households</td>
+      <td>total_rooms / households</td>
+      <td>Average housing-space availability per household.</td>
+      <td>Separates observational-unit scale from density, composition, or resource availability.</td>
+      <td>AUTOMATIC CANDIDATE</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>Denominator must be non-zero; preserve missing values.</td>
+      <td>LOW</td>
+      <td>deterministic_features.py</td>
+      <td>HIGH</td>
+      <td>APPROVE FOR IMPLEMENTATION</td>
+      <td>No zero denominators detected in training data.</td>
+    </tr>
+    <tr>
+      <td>rooms_per_person</td>
+      <td>Deterministic</td>
+      <td>Ratio</td>
+      <td>total_rooms | population</td>
+      <td>total_rooms / population</td>
+      <td>Housing-space availability per person.</td>
+      <td>Separates observational-unit scale from density, composition, or resource availability.</td>
+      <td>AUTOMATIC CANDIDATE</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>Denominator must be non-zero; preserve missing values.</td>
+      <td>LOW</td>
+      <td>deterministic_features.py</td>
+      <td>HIGH</td>
+      <td>APPROVE FOR IMPLEMENTATION</td>
+      <td>No zero denominators detected in training data.</td>
+    </tr>
+  </tbody>
+</table>
+                </div>
+            </section>
+            
+            <section class="section" id="domain">
+                <h2>Domain Features</h2>
+                <div class="table-wrap">
+                    <table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>feature_name</th>
+      <th>feature_group</th>
+      <th>feature_subtype</th>
+      <th>source_columns</th>
+      <th>formula_or_method</th>
+      <th>business_meaning</th>
+      <th>analytical_rationale</th>
+      <th>creation_status</th>
+      <th>used_by_machine_learning</th>
+      <th>used_by_inference</th>
+      <th>used_by_optimization</th>
+      <th>used_by_grey_models</th>
+      <th>requires_training_fit</th>
+      <th>validation_rule</th>
+      <th>leakage_risk</th>
+      <th>implementation_module</th>
+      <th>priority</th>
+      <th>analyst_decision</th>
+      <th>notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>coastal_access_group</td>
+      <td>Domain</td>
+      <td>Category consolidation</td>
+      <td>ocean_proximity</td>
+      <td>Business-approved grouping of proximity categories</td>
+      <td>Simplified market-access or coastal-amenity segment.</td>
+      <td>May improve interpretability when individual categories are sparse or operational decisions use broader segments.</td>
+      <td>OPTIONAL DOMAIN CANDIDATE</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>Grouping must be approved before use and applied identically to every dataset split.</td>
+      <td>LOW</td>
+      <td>domain_features.py</td>
+      <td>LOW</td>
+      <td>REQUIRES DOMAIN APPROVAL</td>
+      <td>Do not collapse categories only to improve model fit.</td>
+    </tr>
+    <tr>
+      <td>distance_to_business_centre</td>
+      <td>Domain</td>
+      <td>External geographic feature</td>
+      <td>longitude | latitude | external_cbd_coordinates</td>
+      <td>Geodesic distance to a defined central business centre</td>
+      <td>Accessibility to major employment and commercial centres.</td>
+      <td>Coordinates alone may not express accessibility clearly.</td>
+      <td>EXTERNAL DATA REQUIRED</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>External reference location and distance method must be documented.</td>
+      <td>LOW</td>
+      <td>domain_features.py</td>
+      <td>LOW</td>
+      <td>DEFER UNTIL EXTERNAL DATA AVAILABLE</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>local_amenity_index</td>
+      <td>Domain</td>
+      <td>External composite index</td>
+      <td>external_amenity_data</td>
+      <td>Business-approved composite score</td>
+      <td>Local access to schools, services, transport, and amenities.</td>
+      <td>Addresses possible omitted neighbourhood characteristics.</td>
+      <td>EXTERNAL DATA REQUIRED</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>Index construction and weighting must be documented.</td>
+      <td>MEDIUM</td>
+      <td>domain_features.py</td>
+      <td>LOW</td>
+      <td>DEFER UNTIL EXTERNAL DATA AVAILABLE</td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+                </div>
+            </section>
+            
+            <section class="section" id="statistical">
+                <h2>Statistical Features</h2>
+                <div class="table-wrap">
+                    <table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>feature_name</th>
+      <th>feature_group</th>
+      <th>feature_subtype</th>
+      <th>source_columns</th>
+      <th>formula_or_method</th>
+      <th>business_meaning</th>
+      <th>analytical_rationale</th>
+      <th>creation_status</th>
+      <th>used_by_machine_learning</th>
+      <th>used_by_inference</th>
+      <th>used_by_optimization</th>
+      <th>used_by_grey_models</th>
+      <th>requires_training_fit</th>
+      <th>validation_rule</th>
+      <th>leakage_risk</th>
+      <th>implementation_module</th>
+      <th>priority</th>
+      <th>analyst_decision</th>
+      <th>notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>latitude_squared</td>
+      <td>Statistical</td>
+      <td>Polynomial term</td>
+      <td>latitude</td>
+      <td>latitude ** 2</td>
+      <td>Allows the marginal relationship of latitude to change with its level.</td>
+      <td>Proposed because the EDA LOWESS screen suggests possible curvature.</td>
+      <td>MODEL-SPECIFICATION CANDIDATE</td>
+      <td>False</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>Retain only when specification, diagnostics, and validation support the nonlinear term.</td>
+      <td>LOW</td>
+      <td>statistical_features.py</td>
+      <td>HIGH</td>
+      <td>EVALUATE, DO NOT IMPOSE</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>longitude_squared</td>
+      <td>Statistical</td>
+      <td>Polynomial term</td>
+      <td>longitude</td>
+      <td>longitude ** 2</td>
+      <td>Allows the marginal relationship of longitude to change with its level.</td>
+      <td>Proposed because the EDA LOWESS screen suggests possible curvature.</td>
+      <td>MODEL-SPECIFICATION CANDIDATE</td>
+      <td>False</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>Retain only when specification, diagnostics, and validation support the nonlinear term.</td>
+      <td>LOW</td>
+      <td>statistical_features.py</td>
+      <td>HIGH</td>
+      <td>EVALUATE, DO NOT IMPOSE</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>households_squared</td>
+      <td>Statistical</td>
+      <td>Polynomial term</td>
+      <td>households</td>
+      <td>households ** 2</td>
+      <td>Allows the marginal relationship of households to change with its level.</td>
+      <td>Proposed because the EDA LOWESS screen suggests possible curvature.</td>
+      <td>MODEL-SPECIFICATION CANDIDATE</td>
+      <td>False</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>Retain only when specification, diagnostics, and validation support the nonlinear term.</td>
+      <td>LOW</td>
+      <td>statistical_features.py</td>
+      <td>MEDIUM</td>
+      <td>EVALUATE, DO NOT IMPOSE</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>housing_median_age_squared</td>
+      <td>Statistical</td>
+      <td>Polynomial term</td>
+      <td>housing_median_age</td>
+      <td>housing_median_age ** 2</td>
+      <td>Allows the marginal relationship of housing_median_age to change with its level.</td>
+      <td>Proposed because the EDA LOWESS screen suggests possible curvature.</td>
+      <td>MODEL-SPECIFICATION CANDIDATE</td>
+      <td>False</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>Retain only when specification, diagnostics, and validation support the nonlinear term.</td>
+      <td>LOW</td>
+      <td>statistical_features.py</td>
+      <td>MEDIUM</td>
+      <td>EVALUATE, DO NOT IMPOSE</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>income_age_interaction</td>
+      <td>Statistical</td>
+      <td>Interaction</td>
+      <td>median_income | housing_median_age</td>
+      <td>median_income * housing_median_age</td>
+      <td>Tests whether the relationship between income and the response varies with housing age.</td>
+      <td>Proposed as an interaction hypothesis; not justified by marginal effects alone.</td>
+      <td>HYPOTHESIS CANDIDATE</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>Retain only with conceptual justification and incremental empirical value.</td>
+      <td>LOW</td>
+      <td>statistical_features.py</td>
+      <td>MEDIUM</td>
+      <td>EVALUATE, DO NOT IMPOSE</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>income_ocean_proximity_interaction</td>
+      <td>Statistical</td>
+      <td>Interaction</td>
+      <td>median_income | ocean_proximity</td>
+      <td>median_income × one-hot ocean-proximity indicators</td>
+      <td>Allows the income relationship to differ across location categories.</td>
+      <td>Proposed as an interaction hypothesis; not justified by marginal effects alone.</td>
+      <td>HYPOTHESIS CANDIDATE</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>Retain only with conceptual justification and incremental empirical value.</td>
+      <td>LOW</td>
+      <td>statistical_features.py</td>
+      <td>MEDIUM</td>
+      <td>EVALUATE, DO NOT IMPOSE</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>longitude_latitude_interaction</td>
+      <td>Statistical</td>
+      <td>Interaction</td>
+      <td>longitude | latitude</td>
+      <td>longitude * latitude</td>
+      <td>Joint geographic effect.</td>
+      <td>Proposed as an interaction hypothesis; not justified by marginal effects alone.</td>
+      <td>HYPOTHESIS CANDIDATE</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>Retain only with conceptual justification and incremental empirical value.</td>
+      <td>LOW</td>
+      <td>statistical_features.py</td>
+      <td>MEDIUM</td>
+      <td>EVALUATE, DO NOT IMPOSE</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>median_income_squared</td>
+      <td>Statistical</td>
+      <td>Polynomial term</td>
+      <td>median_income</td>
+      <td>median_income ** 2</td>
+      <td>Allows the marginal relationship of median_income to change with its level.</td>
+      <td>Proposed because the EDA LOWESS screen suggests possible curvature.</td>
+      <td>MODEL-SPECIFICATION CANDIDATE</td>
+      <td>False</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>Retain only when specification, diagnostics, and validation support the nonlinear term.</td>
+      <td>LOW</td>
+      <td>statistical_features.py</td>
+      <td>MEDIUM</td>
+      <td>EVALUATE, DO NOT IMPOSE</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>population_squared</td>
+      <td>Statistical</td>
+      <td>Polynomial term</td>
+      <td>population</td>
+      <td>population ** 2</td>
+      <td>Allows the marginal relationship of population to change with its level.</td>
+      <td>Proposed because the EDA LOWESS screen suggests possible curvature.</td>
+      <td>MODEL-SPECIFICATION CANDIDATE</td>
+      <td>False</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>Retain only when specification, diagnostics, and validation support the nonlinear term.</td>
+      <td>LOW</td>
+      <td>statistical_features.py</td>
+      <td>MEDIUM</td>
+      <td>EVALUATE, DO NOT IMPOSE</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>total_bedrooms_squared</td>
+      <td>Statistical</td>
+      <td>Polynomial term</td>
+      <td>total_bedrooms</td>
+      <td>total_bedrooms ** 2</td>
+      <td>Allows the marginal relationship of total_bedrooms to change with its level.</td>
+      <td>Proposed because the EDA LOWESS screen suggests possible curvature.</td>
+      <td>MODEL-SPECIFICATION CANDIDATE</td>
+      <td>False</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>Retain only when specification, diagnostics, and validation support the nonlinear term.</td>
+      <td>LOW</td>
+      <td>statistical_features.py</td>
+      <td>MEDIUM</td>
+      <td>EVALUATE, DO NOT IMPOSE</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>total_rooms_squared</td>
+      <td>Statistical</td>
+      <td>Polynomial term</td>
+      <td>total_rooms</td>
+      <td>total_rooms ** 2</td>
+      <td>Allows the marginal relationship of total_rooms to change with its level.</td>
+      <td>Proposed because the EDA LOWESS screen suggests possible curvature.</td>
+      <td>MODEL-SPECIFICATION CANDIDATE</td>
+      <td>False</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>Retain only when specification, diagnostics, and validation support the nonlinear term.</td>
+      <td>LOW</td>
+      <td>statistical_features.py</td>
+      <td>MEDIUM</td>
+      <td>EVALUATE, DO NOT IMPOSE</td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+                </div>
+            </section>
+            
+            <section class="section" id="machine-learning">
+                <h2>Machine Learning Features</h2>
+                <div class="table-wrap">
+                    <table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>feature_name</th>
+      <th>feature_group</th>
+      <th>feature_subtype</th>
+      <th>source_columns</th>
+      <th>formula_or_method</th>
+      <th>business_meaning</th>
+      <th>analytical_rationale</th>
+      <th>creation_status</th>
+      <th>used_by_machine_learning</th>
+      <th>used_by_inference</th>
+      <th>used_by_optimization</th>
+      <th>used_by_grey_models</th>
+      <th>requires_training_fit</th>
+      <th>validation_rule</th>
+      <th>leakage_risk</th>
+      <th>implementation_module</th>
+      <th>priority</th>
+      <th>analyst_decision</th>
+      <th>notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>one_hot_categorical_predictors</td>
+      <td>Machine Learning</td>
+      <td>Categorical encoding</td>
+      <td>ocean_proximity</td>
+      <td>OneHotEncoder(handle_unknown='ignore') fitted on training data</td>
+      <td>Represents categorical differences without imposing numerical ordering.</td>
+      <td>Required by linear and gradient-based estimators.</td>
+      <td>MANDATORY FOR ML PIPELINE</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>Fit category levels using training data only.</td>
+      <td>HIGH</td>
+      <td>ml_features.py</td>
+      <td>HIGH</td>
+      <td>APPROVE FOR ML</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>standardized_numeric_predictors</td>
+      <td>Machine Learning</td>
+      <td>Scaling</td>
+      <td>longitude | latitude | housing_median_age | total_rooms | total_bedrooms | population | households | median_income</td>
+      <td>StandardScaler fitted on training data</td>
+      <td>Places numerical predictors on comparable scales.</td>
+      <td>Required for stable gradient-based optimisation.</td>
+      <td>MANDATORY FOR SGD PIPELINE</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>Fit only on training data; reuse unchanged for validation, test, and future observations.</td>
+      <td>HIGH</td>
+      <td>ml_features.py</td>
+      <td>HIGH</td>
+      <td>APPROVE FOR ML</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>polynomial_feature_expansion</td>
+      <td>Machine Learning</td>
+      <td>Polynomial representation</td>
+      <td>longitude | latitude | housing_median_age | total_rooms | total_bedrooms | population | households | median_income</td>
+      <td>PolynomialFeatures degree selected through validation</td>
+      <td>Flexible predictive representation of curvature and interactions.</td>
+      <td>May improve prediction when linear SGD underfits.</td>
+      <td>OPTIONAL VALIDATION CANDIDATE</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>Select complexity using validation data; never choose degree using test performance.</td>
+      <td>HIGH</td>
+      <td>ml_features.py</td>
+      <td>LOW</td>
+      <td>DEFER UNTIL BASELINE VALIDATION</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>spline_basis_for_prediction</td>
+      <td>Machine Learning</td>
+      <td>Spline representation</td>
+      <td>longitude | latitude | housing_median_age | total_rooms | total_bedrooms | population | households | median_income</td>
+      <td>SplineTransformer fitted on training data</td>
+      <td>Flexible smooth predictive relationships.</td>
+      <td>Alternative to high-degree polynomial expansion.</td>
+      <td>OPTIONAL VALIDATION CANDIDATE</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>Select knots and degree through validation.</td>
+      <td>HIGH</td>
+      <td>ml_features.py</td>
+      <td>LOW</td>
+      <td>DEFER UNTIL BASELINE VALIDATION</td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+                </div>
+            </section>
+            
+            <section class="section" id="inferential">
+                <h2>Inferential Features</h2>
+                <div class="table-wrap">
+                    <table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>feature_name</th>
+      <th>feature_group</th>
+      <th>feature_subtype</th>
+      <th>source_columns</th>
+      <th>formula_or_method</th>
+      <th>business_meaning</th>
+      <th>analytical_rationale</th>
+      <th>creation_status</th>
+      <th>used_by_machine_learning</th>
+      <th>used_by_inference</th>
+      <th>used_by_optimization</th>
+      <th>used_by_grey_models</th>
+      <th>requires_training_fit</th>
+      <th>validation_rule</th>
+      <th>leakage_risk</th>
+      <th>implementation_module</th>
+      <th>priority</th>
+      <th>analyst_decision</th>
+      <th>notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>orthogonal_polynomial_terms</td>
+      <td>Inferential</td>
+      <td>Orthogonal polynomial</td>
+      <td>longitude | latitude | housing_median_age | total_rooms | total_bedrooms | population | households | median_income</td>
+      <td>Orthogonal polynomial basis for selected variables</td>
+      <td>Represents curvature while reducing collinearity among polynomial terms.</td>
+      <td>Useful when ordinary squared terms create unstable coefficient estimates.</td>
+      <td>MODEL-SPECIFICATION CANDIDATE</td>
+      <td>False</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>Use only for variables supported by specification and diagnostics.</td>
+      <td>HIGH</td>
+      <td>inference_features.py</td>
+      <td>LOW</td>
+      <td>DEFER UNTIL OLS SPECIFICATION TEST</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>centered_numeric_predictors</td>
+      <td>Inferential</td>
+      <td>Centering</td>
+      <td>longitude | latitude | housing_median_age | total_rooms | total_bedrooms | population | households | median_income</td>
+      <td>x - training mean</td>
+      <td>Makes the intercept and interaction terms more interpretable.</td>
+      <td>Reduces nonessential collinearity in polynomial and interaction specifications.</td>
+      <td>OPTIONAL INFERENTIAL CANDIDATE</td>
+      <td>False</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>Estimate centering constants from training data and preserve them for validation and test.</td>
+      <td>HIGH</td>
+      <td>inference_features.py</td>
+      <td>MEDIUM</td>
+      <td>USE WHEN POLYNOMIAL OR INTERACTION TERMS ENTER</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>interpretable_spline_basis</td>
+      <td>Inferential</td>
+      <td>Spline basis</td>
+      <td>longitude | latitude | median_income</td>
+      <td>Restricted spline basis with documented knots</td>
+      <td>Captures smooth nonlinear relationships while preserving interpretable effect plots.</td>
+      <td>Candidate when linear and polynomial specifications remain inadequate.</td>
+      <td>GAM / SPLINE CANDIDATE</td>
+      <td>False</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>Choose smoothness and knots without using the test set.</td>
+      <td>HIGH</td>
+      <td>inference_features.py</td>
+      <td>MEDIUM</td>
+      <td>DEFER UNTIL LINEAR AND POLYNOMIAL ASSESSMENT</td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+                </div>
+            </section>
+            
+
+</div>
+</body>
+</html>

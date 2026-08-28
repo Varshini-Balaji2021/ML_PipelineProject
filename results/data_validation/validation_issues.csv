@@ -1,0 +1,2 @@
+severity,rule,column,affected_count,message
+WARNING,missing_values,total_bedrooms,207,Missing values allowed with documented treatment.

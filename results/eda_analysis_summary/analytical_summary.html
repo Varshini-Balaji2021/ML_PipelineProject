@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EDA Analytical Notebook</title>
+<style>
+    :root {
+        --navy: #16324f;
+        --teal: #2b7a78;
+        --blue: #2d6a8a;
+        --gold: #c6922e;
+        --red: #a94d44;
+        --green: #4f772d;
+        --purple: #73558f;
+        --light: #f4f7f9;
+        --border: #d8e1e7;
+        --text: #1f2933;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+        margin: 0;
+        font-family: "Segoe UI", Arial, sans-serif;
+        background: #eaf0f4;
+        color: var(--text);
+        line-height: 1.55;
+    }
+
+    .layout {
+        display: grid;
+        grid-template-columns: 260px 1fr;
+        min-height: 100vh;
+    }
+
+    .sidebar {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        padding: 26px 18px;
+        background: var(--navy);
+        color: white;
+        overflow-y: auto;
+    }
+
+    .sidebar h2 {
+        margin: 0 0 18px;
+        font-size: 1.1rem;
+    }
+
+    .sidebar a {
+        display: block;
+        color: white;
+        text-decoration: none;
+        padding: 9px 10px;
+        border-radius: 8px;
+        margin-bottom: 4px;
+        font-size: .9rem;
+    }
+
+    .sidebar a:hover { background: rgba(255,255,255,.12); }
+
+    .main {
+        padding: 32px;
+        max-width: 1500px;
+        width: 100%;
+    }
+
+    .hero {
+        padding: 34px;
+        color: white;
+        border-radius: 18px;
+        background: linear-gradient(135deg,var(--navy),var(--teal));
+        box-shadow: 0 12px 28px rgba(0,0,0,.13);
+    }
+
+    .hero h1 {
+        margin: 0 0 8px;
+        font-size: 2.1rem;
+    }
+
+    .hero p {
+        max-width: 950px;
+        margin-bottom: 0;
+    }
+
+    .purpose-panel {
+        margin-top: 20px;
+        padding: 18px;
+        border-radius: 13px;
+        background: rgba(255,255,255,.12);
+    }
+
+    .purpose-panel h3 { margin-top: 0; }
+
+    .purpose-questions {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+    }
+
+    .purpose-question {
+        padding: 12px;
+        background: rgba(255,255,255,.12);
+        border-radius: 9px;
+        font-size: .88rem;
+        text-align: center;
+    }
+
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit,minmax(180px,1fr));
+        gap: 14px;
+        margin-top: 20px;
+    }
+
+    .summary-card {
+        border-radius: 12px;
+        padding: 17px;
+        color: white;
+    }
+
+    .summary-card.dataset { background: var(--navy); }
+    .summary-card.variables { background: var(--blue); }
+    .summary-card.correlation { background: var(--red); }
+    .summary-card.nonlinearity { background: var(--purple); }
+    .summary-card.engineering { background: var(--green); }
+
+    .card-number {
+        font-size: 1.7rem;
+        font-weight: 700;
+    }
+
+    .card-label {
+        font-size: .88rem;
+        opacity: .92;
+    }
+
+    .section {
+        margin-top: 24px;
+        padding: 25px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,.06);
+    }
+
+    .section h2 {
+        margin-top: 0;
+        color: var(--navy);
+        border-bottom: 3px solid var(--teal);
+        padding-bottom: 8px;
+    }
+
+    .section-intro {
+        color: #52616d;
+        margin-top: -4px;
+    }
+
+    .table-wrap { overflow-x: auto; }
+
+    table.data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: .84rem;
+    }
+
+    .data-table th {
+        background: var(--navy);
+        color: white;
+        text-align: left;
+        padding: 9px;
+        white-space: nowrap;
+    }
+
+    .data-table td {
+        padding: 9px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+    }
+
+    .data-table tr:nth-child(even) { background: #f8fafb; }
+
+    .two-column,
+    .workflow-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+
+    .feature-card,
+    .workflow-card,
+    .strategy-card {
+        border: 1px solid var(--border);
+        border-radius: 13px;
+        padding: 20px;
+        background: #fafcfd;
+    }
+
+    .feature-card h3,
+    .workflow-card h3,
+    .strategy-card h3 {
+        margin-top: 0;
+        color: var(--navy);
+        text-align: center;
+    }
+
+    details {
+        border: 1px solid var(--border);
+        border-radius: 11px;
+        margin-top: 12px;
+        overflow: hidden;
+    }
+
+    summary {
+        cursor: pointer;
+        font-weight: 700;
+        padding: 13px 15px;
+        background: #eef3f6;
+        color: var(--navy);
+    }
+
+    details .table-wrap { padding: 14px; }
+
+    .gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fit,minmax(360px,1fr));
+        gap: 18px;
+    }
+
+    .figure-card {
+        margin: 0;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        background: white;
+    }
+
+    .figure-card img {
+        width: 100%;
+        display: block;
+    }
+
+    .figure-card figcaption {
+        padding: 10px;
+        text-align: center;
+        font-weight: 700;
+    }
+
+    .vertical-flow { text-align: center; }
+
+    .flow-node {
+        display: inline-block;
+        min-width: 230px;
+        padding: 10px 14px;
+        border-radius: 9px;
+        background: #edf3f6;
+        border: 1px solid var(--border);
+        font-weight: 600;
+    }
+
+    .decision-node {
+        background: #fff4d9;
+        border-color: var(--gold);
+    }
+
+    .final-node {
+        background: var(--teal);
+        color: white;
+        border: 0;
+    }
+
+    .flow-arrow {
+        font-size: 1.35rem;
+        color: var(--teal);
+        line-height: 1.35;
+    }
+
+    .decision-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin: 12px 0;
+    }
+
+    .decision-column {
+        padding: 12px;
+        border: 1px dashed var(--border);
+        border-radius: 10px;
+    }
+
+    .decision-label {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 20px;
+        color: white;
+        font-size: .82rem;
+        font-weight: 700;
+    }
+
+    .decision-label.pass { background: var(--green); }
+    .decision-label.reject { background: var(--red); }
+
+    .branch-line {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        width: 75%;
+        height: 20px;
+        margin: 0 auto;
+    }
+
+    .branch-line span:first-child {
+        border-top: 2px solid var(--teal);
+        border-right: 1px solid var(--teal);
+    }
+
+    .branch-line span:last-child {
+        border-top: 2px solid var(--teal);
+        border-left: 1px solid var(--teal);
+    }
+
+    .merge-label {
+        display: inline-block;
+        margin-top: 8px;
+        padding: 6px 10px;
+        border-radius: 20px;
+        background: #e8eef2;
+        color: var(--navy);
+        font-size: .78rem;
+        font-weight: 700;
+    }
+
+    .selection-flow {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 15px;
+    }
+
+    .selection-step {
+        padding: 10px 13px;
+        border-radius: 9px;
+        background: #edf3f6;
+        border: 1px solid var(--border);
+        font-weight: 600;
+    }
+
+    .selection-arrow {
+        color: var(--teal);
+        font-size: 1.2rem;
+    }
+
+    .conclusion {
+        white-space: pre-wrap;
+        background: #f8fafb;
+        border-left: 5px solid var(--teal);
+        padding: 18px;
+        border-radius: 9px;
+    }
+
+    .note {
+        background: #fff7db;
+        border-left: 5px solid var(--gold);
+        padding: 15px;
+        border-radius: 9px;
+    }
+
+    .empty {
+        color: #74828d;
+        font-style: italic;
+    }
+
+    @media (max-width: 1150px) {
+        .purpose-questions { grid-template-columns: 1fr; }
+        .layout { grid-template-columns: 1fr; }
+        .sidebar {
+            position: static;
+            height: auto;
+        }
+        .two-column,
+        .workflow-grid { grid-template-columns: 1fr; }
+    }
+
+    @media print {
+        .sidebar { display: none; }
+        .layout { display: block; }
+        body { background: white; }
+        .main { padding: 0; }
+        .section,
+        .hero { box-shadow: none; }
+    }
+    </style>
+</head>
+<body>
+
+<div class="layout">
+
+<nav class="sidebar">
+<h2>EDA Analytical Notebook</h2>
+<a href="#overview">Overview</a>
+<a href="#variables">Candidate Variables</a>
+<a href="#correlation">Multicollinearity Screen</a>
+<a href="#nonlinearity">LOWESS Review</a>
+<a href="#engineering">Feature Engineering</a>
+<a href="#business">Business Interpretation</a>
+<a href="#selection">Variable Selection Strategy</a>
+<a href="#challenges">Modelling Challenges</a>
+<a href="#workflow">Recommended Workflow</a>
+<a href="#figures">LOWESS Figures</a>
+<a href="#conclusion">Executive Summary</a>
+</nav>
+
+<main class="main">
+
+<section class="hero" id="overview">
+<h1>EDA Analytical Notebook</h1>
+<p>
+This domain-neutral notebook converts exploratory findings into candidate
+variable guidance, relationship assessment, business interpretation,
+feature ideas, modelling challenges, and the recommended analytical path.
+</p>
+
+<div class="purpose-panel">
+<h3>Purpose of EDA</h3>
+<div class="purpose-questions">
+<div class="purpose-question">1. What does the data look like?</div>
+<div class="purpose-question">2. Which variables remain candidates?</div>
+<div class="purpose-question">3. What relationships and patterns exist?</div>
+<div class="purpose-question">4. What challenges may affect modelling?</div>
+<div class="purpose-question">5. How should modelling proceed?</div>
+</div>
+</div>
+
+<div class="summary-grid">
+
+        <div class="summary-card dataset">
+            <div class="card-number">14,448</div>
+            <div class="card-label">Training observations</div>
+        </div>
+        
+        <div class="summary-card variables">
+            <div class="card-number">9</div>
+            <div class="card-label">Candidate predictors</div>
+        </div>
+        
+        <div class="summary-card correlation">
+            <div class="card-number">7</div>
+            <div class="card-label">High-correlation pairs</div>
+        </div>
+        
+        <div class="summary-card nonlinearity">
+            <div class="card-number">8</div>
+            <div class="card-label">Curved relationships</div>
+        </div>
+        
+        <div class="summary-card engineering">
+            <div class="card-number">8</div>
+            <div class="card-label">Engineered features</div>
+        </div>
+        
+</div>
+</section>
+
+<section class="section" id="variables">
+<h2>🟢 Candidate Explanatory Variables</h2>
+<p class="section-intro">
+This first table answers why each variable should be considered. Correlation
+and LOWESS evidence are reported in later sections rather than being used as
+the organising principle for candidate selection.
+</p>
+<div class="table-wrap">
+<table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>feature</th>
+      <th>semantic_type</th>
+      <th>business_rationale</th>
+      <th>expected_relationship</th>
+      <th>candidate_status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>longitude</td>
+      <td>spatial_coordinate</td>
+      <td>Geographic position may capture regional market structure and nonlinear spatial effects.</td>
+      <td>Expected regional and nonlinear spatial variation.</td>
+      <td>RETAIN AS CANDIDATE</td>
+    </tr>
+    <tr>
+      <td>latitude</td>
+      <td>spatial_coordinate</td>
+      <td>Geographic position may capture regional market structure and nonlinear spatial effects.</td>
+      <td>Expected regional and nonlinear spatial variation.</td>
+      <td>RETAIN AS CANDIDATE</td>
+    </tr>
+    <tr>
+      <td>housing_median_age</td>
+      <td>discrete_numeric</td>
+      <td>The variable may have a nonlinear or piecewise relationship with house value.</td>
+      <td>Possible nonlinear or threshold effect.</td>
+      <td>RETAIN AS CANDIDATE</td>
+    </tr>
+    <tr>
+      <td>total_rooms</td>
+      <td>count</td>
+      <td>The variable may contribute through scale, density, ratio, or interaction effects.</td>
+      <td>Ambiguous raw-scale effect; ratios may be more informative.</td>
+      <td>RETAIN AS CANDIDATE</td>
+    </tr>
+    <tr>
+      <td>total_bedrooms</td>
+      <td>count</td>
+      <td>The variable may contribute through scale, density, ratio, or interaction effects.</td>
+      <td>Ambiguous raw-scale effect; ratios may be more informative.</td>
+      <td>RETAIN AS CANDIDATE</td>
+    </tr>
+    <tr>
+      <td>population</td>
+      <td>count</td>
+      <td>The variable may contribute through scale, density, ratio, or interaction effects.</td>
+      <td>Possible density and congestion effect.</td>
+      <td>RETAIN AS CANDIDATE</td>
+    </tr>
+    <tr>
+      <td>households</td>
+      <td>count</td>
+      <td>The variable may contribute through scale, density, ratio, or interaction effects.</td>
+      <td>Possible block-size and occupancy effect.</td>
+      <td>RETAIN AS CANDIDATE</td>
+    </tr>
+    <tr>
+      <td>median_income</td>
+      <td>continuous_numeric</td>
+      <td>The variable remains conceptually relevant and should be assessed jointly with other predictors.</td>
+      <td>Expected positive association with house value.</td>
+      <td>RETAIN AS CANDIDATE</td>
+    </tr>
+    <tr>
+      <td>ocean_proximity</td>
+      <td>nominal_categorical</td>
+      <td>Systematic differences between categories may explain house-price variation.</td>
+      <td>Expected systematic differences across categories.</td>
+      <td>RETAIN AS CANDIDATE</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</section>
+
+<section class="section" id="correlation">
+<h2>🔵 Multicollinearity Screening</h2>
+<p class="section-intro">
+High pairwise association signals possible redundancy for inferential
+coefficient estimation. It is not an automatic removal rule and may be
+acceptable in predictive models when validation performance benefits.
+</p>
+<div class="table-wrap">
+<table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>feature_1</th>
+      <th>feature_2</th>
+      <th>correlation</th>
+      <th>absolute_correlation</th>
+      <th>eda_interpretation</th>
+      <th>machine_learning_implication</th>
+      <th>inferential_implication</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>longitude</td>
+      <td>latitude</td>
+      <td>-0.924673</td>
+      <td>0.924673</td>
+      <td>High pairwise association</td>
+      <td>Retain initially. Predictive models may use both variables if validation performance benefits.</td>
+      <td>Do not remove at EDA stage. Assess VIF, condition number, estimability, and theory before coefficient interpretation.</td>
+    </tr>
+    <tr>
+      <td>total_rooms</td>
+      <td>total_bedrooms</td>
+      <td>0.929288</td>
+      <td>0.929288</td>
+      <td>High pairwise association</td>
+      <td>Retain initially. Predictive models may use both variables if validation performance benefits.</td>
+      <td>Do not remove at EDA stage. Assess VIF, condition number, estimability, and theory before coefficient interpretation.</td>
+    </tr>
+    <tr>
+      <td>total_rooms</td>
+      <td>population</td>
+      <td>0.853244</td>
+      <td>0.853244</td>
+      <td>High pairwise association</td>
+      <td>Retain initially. Predictive models may use both variables if validation performance benefits.</td>
+      <td>Do not remove at EDA stage. Assess VIF, condition number, estimability, and theory before coefficient interpretation.</td>
+    </tr>
+    <tr>
+      <td>total_rooms</td>
+      <td>households</td>
+      <td>0.917442</td>
+      <td>0.917442</td>
+      <td>High pairwise association</td>
+      <td>Retain initially. Predictive models may use both variables if validation performance benefits.</td>
+      <td>Do not remove at EDA stage. Assess VIF, condition number, estimability, and theory before coefficient interpretation.</td>
+    </tr>
+    <tr>
+      <td>total_bedrooms</td>
+      <td>population</td>
+      <td>0.873909</td>
+      <td>0.873909</td>
+      <td>High pairwise association</td>
+      <td>Retain initially. Predictive models may use both variables if validation performance benefits.</td>
+      <td>Do not remove at EDA stage. Assess VIF, condition number, estimability, and theory before coefficient interpretation.</td>
+    </tr>
+    <tr>
+      <td>total_bedrooms</td>
+      <td>households</td>
+      <td>0.979684</td>
+      <td>0.979684</td>
+      <td>High pairwise association</td>
+      <td>Retain initially. Predictive models may use both variables if validation performance benefits.</td>
+      <td>Do not remove at EDA stage. Assess VIF, condition number, estimability, and theory before coefficient interpretation.</td>
+    </tr>
+    <tr>
+      <td>population</td>
+      <td>households</td>
+      <td>0.902632</td>
+      <td>0.902632</td>
+      <td>High pairwise association</td>
+      <td>Retain initially. Predictive models may use both variables if validation performance benefits.</td>
+      <td>Do not remove at EDA stage. Assess VIF, condition number, estimability, and theory before coefficient interpretation.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</section>
+
+<section class="section" id="nonlinearity">
+<h2>🟣 LOWESS Deviation and Analyst Review</h2>
+<p class="section-intro">
+The score ranks deviation from a linear approximation. The automated screen
+is not the final classification: review the figure, record the visual evidence,
+and confirm the decision through specification tests and validation.
+</p>
+<div class="table-wrap">
+<table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>feature</th>
+      <th>lowess_deviation_score</th>
+      <th>visual_evidence</th>
+      <th>analyst_decision</th>
+      <th>provisional_model_implication</th>
+      <th>figure_file</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>longitude</td>
+      <td>0.395259</td>
+      <td>Review the corresponding LOWESS figure</td>
+      <td>Not reviewed</td>
+      <td>Do not rely only on a linear coefficient; compare nonlinear OLS and GAM specifications.</td>
+      <td>lowess_longitude.png</td>
+    </tr>
+    <tr>
+      <td>latitude</td>
+      <td>0.359904</td>
+      <td>Review the corresponding LOWESS figure</td>
+      <td>Not reviewed</td>
+      <td>Do not rely only on a linear coefficient; compare nonlinear OLS and GAM specifications.</td>
+      <td>lowess_latitude.png</td>
+    </tr>
+    <tr>
+      <td>total_rooms</td>
+      <td>0.216572</td>
+      <td>Review the corresponding LOWESS figure</td>
+      <td>Not reviewed</td>
+      <td>Evaluate nonlinear polynomial and GAM effects.</td>
+      <td>lowess_total_rooms.png</td>
+    </tr>
+    <tr>
+      <td>total_bedrooms</td>
+      <td>0.196473</td>
+      <td>Review the corresponding LOWESS figure</td>
+      <td>Not reviewed</td>
+      <td>Evaluate nonlinear polynomial and GAM effects.</td>
+      <td>lowess_total_bedrooms.png</td>
+    </tr>
+    <tr>
+      <td>households</td>
+      <td>0.195267</td>
+      <td>Review the corresponding LOWESS figure</td>
+      <td>Not reviewed</td>
+      <td>Evaluate nonlinear polynomial and GAM effects.</td>
+      <td>lowess_households.png</td>
+    </tr>
+    <tr>
+      <td>housing_median_age</td>
+      <td>0.194547</td>
+      <td>Review the corresponding LOWESS figure</td>
+      <td>Not reviewed</td>
+      <td>Evaluate nonlinear polynomial and GAM effects.</td>
+      <td>lowess_housing_median_age.png</td>
+    </tr>
+    <tr>
+      <td>population</td>
+      <td>0.181776</td>
+      <td>Review the corresponding LOWESS figure</td>
+      <td>Not reviewed</td>
+      <td>Evaluate nonlinear polynomial and GAM effects.</td>
+      <td>lowess_population.png</td>
+    </tr>
+    <tr>
+      <td>median_income</td>
+      <td>0.164552</td>
+      <td>Review the corresponding LOWESS figure</td>
+      <td>Not reviewed</td>
+      <td>Evaluate nonlinear polynomial and GAM effects.</td>
+      <td>lowess_median_income.png</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</section>
+
+<section class="section" id="engineering">
+<h2>🔵 Feature Engineering</h2>
+
+<div class="two-column">
+
+<div class="feature-card">
+<h3>Automatically Generated Variables</h3>
+<p>
+These ratios have direct business meaning and may be generated consistently
+across training, validation, test, and future data.
+</p>
+<div class="table-wrap">
+<table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>recommended_feature</th>
+      <th>formula</th>
+      <th>business_meaning</th>
+      <th>recommendation_type</th>
+      <th>implementation_rule</th>
+      <th>caution</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>rooms_per_household</td>
+      <td>total_rooms / households</td>
+      <td>Average housing-space availability per household.</td>
+      <td>DETERMINISTIC RATIO</td>
+      <td>Create automatically</td>
+      <td>Protect against zero denominators and fit all model-dependent transformations on training data only.</td>
+    </tr>
+    <tr>
+      <td>bedrooms_per_room</td>
+      <td>total_bedrooms / total_rooms</td>
+      <td>Internal composition of the housing stock.</td>
+      <td>DETERMINISTIC RATIO</td>
+      <td>Create automatically</td>
+      <td>Protect against zero denominators and fit all model-dependent transformations on training data only.</td>
+    </tr>
+    <tr>
+      <td>population_per_household</td>
+      <td>population / households</td>
+      <td>Average household occupancy.</td>
+      <td>DETERMINISTIC RATIO</td>
+      <td>Create automatically</td>
+      <td>Protect against zero denominators and fit all model-dependent transformations on training data only.</td>
+    </tr>
+    <tr>
+      <td>bedrooms_per_household</td>
+      <td>total_bedrooms / households</td>
+      <td>Bedroom availability per household.</td>
+      <td>DETERMINISTIC RATIO</td>
+      <td>Create automatically</td>
+      <td>Protect against zero denominators and fit all model-dependent transformations on training data only.</td>
+    </tr>
+    <tr>
+      <td>rooms_per_person</td>
+      <td>total_rooms / population</td>
+      <td>Housing-space availability per person.</td>
+      <td>DETERMINISTIC RATIO</td>
+      <td>Create automatically</td>
+      <td>Protect against zero denominators and fit all model-dependent transformations on training data only.</td>
+    </tr>
+    <tr>
+      <td>bedrooms_per_person</td>
+      <td>total_bedrooms / population</td>
+      <td>Bedroom availability per person.</td>
+      <td>DETERMINISTIC RATIO</td>
+      <td>Create automatically</td>
+      <td>Protect against zero denominators and fit all model-dependent transformations on training data only.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+<div class="feature-card">
+<h3>Exploratory Interaction Hypotheses</h3>
+<p>
+These are hypotheses rather than mandatory transformations. Retain them only
+when they have conceptual justification and add validated value.
+</p>
+<div class="table-wrap">
+<table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>recommended_feature</th>
+      <th>formula</th>
+      <th>business_meaning</th>
+      <th>recommendation_type</th>
+      <th>implementation_rule</th>
+      <th>caution</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>longitude_latitude_interaction</td>
+      <td>longitude × latitude</td>
+      <td>Exploratory interaction representing joint location.</td>
+      <td>EXPLORATORY INTERACTION</td>
+      <td>Evaluate as a candidate, not as a mandatory feature</td>
+      <td>Protect against zero denominators and fit all model-dependent transformations on training data only.</td>
+    </tr>
+    <tr>
+      <td>income_ocean_proximity_interaction</td>
+      <td>median_income × ocean_proximity indicators</td>
+      <td>Tests whether income effects differ by coastal category.</td>
+      <td>EXPLORATORY INTERACTION</td>
+      <td>Evaluate as a candidate, not as a mandatory feature</td>
+      <td>Protect against zero denominators and fit all model-dependent transformations on training data only.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+</section>
+
+<section class="section" id="business">
+<h2>🟠 Business Interpretation</h2>
+<p class="section-intro">
+Each interpretation follows the same sequence: observed pattern, possible
+explanation, business implication, and inferential caution.
+</p>
+<div class="table-wrap">
+<table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>feature_or_pattern</th>
+      <th>observed_pattern</th>
+      <th>possible_explanation</th>
+      <th>business_implication</th>
+      <th>inferential_caution</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>median_income</td>
+      <td>Correlation with the response = 0.6879.</td>
+      <td>The variable may capture purchasing power, local demand, neighbourhood quality, access to services, amenities, and employment opportunities.</td>
+      <td>Useful for segmentation, pricing, location assessment, affordability analysis, and scenario design.</td>
+      <td>The relationship is associative and may overlap with location and omitted neighbourhood characteristics.</td>
+    </tr>
+    <tr>
+      <td>latitude and longitude</td>
+      <td>Weak marginal linear associations, strong joint association, and visually curved response patterns.</td>
+      <td>The outcome may vary across regional markets rather than following one uniform geographic gradient.</td>
+      <td>Supports regional segmentation, territory planning, location strategy, and geographically differentiated decision rules.</td>
+      <td>Separate linear coefficients may not adequately capture spatial structure or local dependence.</td>
+    </tr>
+    <tr>
+      <td>ocean_proximity</td>
+      <td>Highest mean response category: ISLAND; lowest: INLAND.</td>
+      <td>The categories may capture amenity value, scarcity, accessibility, and geographic market segmentation.</td>
+      <td>Useful for differentiated valuation, pricing bands, portfolio design, and location-based decisions.</td>
+      <td>Category differences may overlap with income, coordinates, and unmeasured neighbourhood characteristics.</td>
+    </tr>
+    <tr>
+      <td>housing stock and occupancy variables</td>
+      <td>Room, bedroom, household, and population counts are strongly associated with one another.</td>
+      <td>Raw counts partly measure the size of the observational unit. Ratios may better represent density, crowding, composition, and resource availability.</td>
+      <td>Supports occupancy analysis, capacity assessment, neighbourhood comparison, and more interpretable indicators.</td>
+      <td>VIF and estimability must be assessed before interpreting their coefficients separately.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</section>
+
+<section class="section" id="selection">
+<h2>Variable Selection Strategy</h2>
+<p class="section-intro">
+EDA does not remove variables. Final selection occurs only after feature
+generation and model-specific evaluation.
+</p>
+
+<div class="strategy-card">
+<h3>Selection Logic</h3>
+<div class="selection-flow">
+<div class="selection-step">Schema-Approved Variables</div>
+<div class="selection-arrow">→</div>
+<div class="selection-step">EDA Candidate Set</div>
+<div class="selection-arrow">→</div>
+<div class="selection-step">Feature Generation</div>
+<div class="selection-arrow">→</div>
+<div class="selection-step">Model-Based Assessment</div>
+<div class="selection-arrow">→</div>
+<div class="selection-step">Validation</div>
+<div class="selection-arrow">→</div>
+<div class="selection-step">Final Model</div>
+</div>
+</div>
+</section>
+
+<section class="section" id="challenges">
+<h2>🟣 Potential Modelling Challenges</h2>
+<p class="section-intro">
+Challenges are grouped into data, statistical, and business or structural
+issues to make their implications and required actions clear.
+</p>
+
+            <details open>
+                <summary>Statistical issue</summary>
+                <div class="table-wrap">
+                    <table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>challenge</th>
+      <th>evidence</th>
+      <th>implication</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Response asymmetry</td>
+      <td>Response skewness = 0.9857.</td>
+      <td>Consider transformation only when it improves validation or specification adequacy.</td>
+    </tr>
+    <tr>
+      <td>High predictor association</td>
+      <td>7 predictor pair(s) have |r| &gt;= 0.80.</td>
+      <td>Run VIF and condition-number checks for inference; retain for ML unless validation indicates otherwise.</td>
+    </tr>
+    <tr>
+      <td>Possible nonlinear relationships</td>
+      <td>longitude, latitude, total_rooms, total_bedrooms, households, housing_median_age, population, median_income</td>
+      <td>Compare linear, nonlinear polynomial, and smooth specifications; treat the LOWESS screen as provisional.</td>
+    </tr>
+    <tr>
+      <td>Potential omitted variables</td>
+      <td>The available predictors may not fully measure local quality, accessibility, institutional conditions, or market expectations.</td>
+      <td>Avoid causal claims and document the limits of the available data when interpreting coefficients.</td>
+    </tr>
+    <tr>
+      <td>Possible interaction effects</td>
+      <td>Geographic, socioeconomic, and categorical variables may modify one another's relationships with the response.</td>
+      <td>Evaluate selected interactions as hypotheses and retain them only when theoretically meaningful and empirically supported.</td>
+    </tr>
+  </tbody>
+</table>
+                </div>
+            </details>
+            
+            <details open>
+                <summary>Data issue</summary>
+                <div class="table-wrap">
+                    <table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>challenge</th>
+      <th>evidence</th>
+      <th>implication</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Missing predictor values</td>
+      <td>Missing values remain in: total_bedrooms</td>
+      <td>Fit imputation using training data only.</td>
+    </tr>
+    <tr>
+      <td>Potential extreme observations</td>
+      <td>total_rooms, total_bedrooms, households, population, median_house_value</td>
+      <td>Retain for prediction unless domain evidence supports removal; perform sensitivity analysis for inference.</td>
+    </tr>
+    <tr>
+      <td>Measurement limitations</td>
+      <td>Several variables are aggregated summaries rather than individual-level measurements.</td>
+      <td>Interpret findings at the observational-unit level and avoid individual-level conclusions.</td>
+    </tr>
+  </tbody>
+</table>
+                </div>
+            </details>
+            
+            <details open>
+                <summary>Business / structural issue</summary>
+                <div class="table-wrap">
+                    <table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>challenge</th>
+      <th>evidence</th>
+      <th>implication</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Spatial heterogeneity</td>
+      <td>Coordinates exhibit strong joint geographic structure.</td>
+      <td>Purely linear spatial effects may be insufficient; regional segmentation or smooth spatial effects may matter.</td>
+    </tr>
+  </tbody>
+</table>
+                </div>
+            </details>
+            
+</section>
+
+<section class="section" id="workflow">
+<h2>🔴 Recommended Analytical Workflow</h2>
+<p class="section-intro">
+The predictive and inferential branches use different quality criteria and
+therefore proceed through distinct but complementary paths.
+</p>
+
+
+    <div class="workflow-grid">
+
+        <div class="workflow-card">
+            <h3>Machine Learning Branch</h3>
+            <div class="vertical-flow">
+                <div class="flow-node">Candidate Variables</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-node">Automatic Feature Generation</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-node">Training</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-node">Validation</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-node">Hyperparameter Tuning</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-node">Frozen Model</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-node">Untouched Test Set</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-node final-node">Operational Use</div>
+            </div>
+        </div>
+
+        <div class="workflow-card">
+            <h3>Inferential Branch</h3>
+            <div class="vertical-flow">
+                <div class="flow-node">Candidate Variables</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-node">Linear OLS Baseline</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-node">VIF + Condition Number</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-node decision-node">RESET Specification Test</div>
+
+                <div class="branch-line">
+                    <span></span>
+                    <span></span>
+                </div>
+
+                <div class="decision-grid">
+                    <div class="decision-column">
+                        <div class="decision-label pass">PASS</div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-node">OLS Diagnostics</div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-node">Robust Inference</div>
+                    </div>
+
+                    <div class="decision-column">
+                        <div class="decision-label reject">REJECT</div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-node">Polynomial OLS</div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-node">Model-Specific Diagnostics</div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-node">GAM if Still Inadequate</div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-node">GAM Diagnostics</div>
+                    </div>
+                </div>
+
+                <div class="merge-label">VALID MODEL CANDIDATES</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-node">Model-Family Comparison</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-node">Validation</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-node">Untouched Test Set</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-node">Full-Sample Estimation</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-node final-node">Interpretation</div>
+            </div>
+        </div>
+
+    </div>
+    
+
+<div class="table-wrap" style="margin-top:20px">
+<table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>sequence</th>
+      <th>analytical_branch</th>
+      <th>stage</th>
+      <th>recommendation</th>
+      <th>reason</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>Both</td>
+      <td>Candidate explanatory variables</td>
+      <td>Begin with all schema-approved predictors.</td>
+      <td>EDA is a screening stage. Weak marginal correlation does not justify exclusion.</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>Both</td>
+      <td>Feature engineering</td>
+      <td>Create deterministic ratios and evaluate selected interaction hypotheses.</td>
+      <td>Ratios may separate block size from housing density and occupancy conditions.</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>Machine Learning</td>
+      <td>Training and validation</td>
+      <td>Retain the complete engineered feature set initially; train, tune, validate, freeze, and test.</td>
+      <td>Predictive contribution may arise through joint, nonlinear, and interaction effects.</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>Inferential</td>
+      <td>Linear baseline</td>
+      <td>Estimate Linear OLS and assess VIF and condition number.</td>
+      <td>7 high-correlation predictor pair(s) were identified.</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>Inferential</td>
+      <td>Specification decision</td>
+      <td>Apply RESET. If the linear model passes, proceed to diagnostics and robust inference.</td>
+      <td>A valid linear model should be retained when specification and diagnostics are acceptable.</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>Inferential</td>
+      <td>Alternative specification</td>
+      <td>If Linear OLS fails, evaluate nonlinear polynomial OLS and then GAM.</td>
+      <td>Exploratory curvature appears in: longitude, latitude, total_rooms, total_bedrooms, households, housing_median_age, population, median_income.</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td>Inferential</td>
+      <td>Model-family evaluation</td>
+      <td>Diagnose each valid family, compare models, validate, test, and then estimate the selected model on the full sample.</td>
+      <td>Model choice should reflect specification adequacy, diagnostics, interpretability, and out-of-sample evidence.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</section>
+
+<section class="section" id="figures">
+<h2>LOWESS Figures</h2>
+<p class="section-intro">
+Use these plots to record visual evidence before accepting the automated
+screen. A LOWESS curve is exploratory evidence, not a formal specification
+test.
+</p>
+<div class="gallery">
+
+            <figure class="figure-card">
+                <img src="figures/lowess_households.png" alt="Lowess Households">
+                <figcaption>Lowess Households</figcaption>
+            </figure>
+            
+            <figure class="figure-card">
+                <img src="figures/lowess_housing_median_age.png" alt="Lowess Housing Median Age">
+                <figcaption>Lowess Housing Median Age</figcaption>
+            </figure>
+            
+            <figure class="figure-card">
+                <img src="figures/lowess_latitude.png" alt="Lowess Latitude">
+                <figcaption>Lowess Latitude</figcaption>
+            </figure>
+            
+            <figure class="figure-card">
+                <img src="figures/lowess_longitude.png" alt="Lowess Longitude">
+                <figcaption>Lowess Longitude</figcaption>
+            </figure>
+            
+            <figure class="figure-card">
+                <img src="figures/lowess_median_income.png" alt="Lowess Median Income">
+                <figcaption>Lowess Median Income</figcaption>
+            </figure>
+            
+            <figure class="figure-card">
+                <img src="figures/lowess_population.png" alt="Lowess Population">
+                <figcaption>Lowess Population</figcaption>
+            </figure>
+            
+            <figure class="figure-card">
+                <img src="figures/lowess_total_bedrooms.png" alt="Lowess Total Bedrooms">
+                <figcaption>Lowess Total Bedrooms</figcaption>
+            </figure>
+            
+            <figure class="figure-card">
+                <img src="figures/lowess_total_rooms.png" alt="Lowess Total Rooms">
+                <figcaption>Lowess Total Rooms</figcaption>
+            </figure>
+            
+</div>
+</section>
+
+<section class="section" id="conclusion">
+<h2>Executive Summary</h2>
+<div class="conclusion">EXECUTIVE EDA SUMMARY
+======================================================================
+
+The exploratory analysis suggests that:
+
+✓ All schema-approved predictors should remain candidates at this stage.
+
+✓ Weak marginal correlation is not treated as evidence that a predictor
+  is unimportant. Joint, nonlinear, interaction, categorical, and spatial
+  contributions remain possible.
+
+✓ 7 highly associated predictor pair(s) require
+  VIF and condition-number assessment before inferential coefficient
+  interpretation.
+
+✓ The provisional LOWESS screen indicates material curvature for:
+  longitude, latitude, total_rooms, total_bedrooms, households, housing_median_age, population, median_income.
+  These findings require visual and model-based confirmation.
+
+✓ 6 automatically generated ratio variable(s) have direct
+  business meaning, while 2 interaction hypothesis(es)
+  should be evaluated rather than imposed.
+
+✓ Potential extreme observations should generally be retained for machine
+  learning and examined through sensitivity analysis for inference.
+
+Recommended modelling direction:
+
+Machine Learning
+    Candidate variables → Feature generation → Training → Validation
+    → Tuning → Frozen model → Test → Operational use
+
+Inferential Analysis
+    Linear baseline → Multicollinearity assessment → RESET
+    → Diagnostics or alternative nonlinear specification
+    → Model comparison → Validation → Test
+    → Full-sample estimation → Interpretation
+
+EDA guides the next stage but does not determine the final model.
+======================================================================
+</div>
+</section>
+
+<section class="section">
+<h2>Methodological Caution</h2>
+<div class="note">
+EDA guides model development but does not establish causality, statistical
+significance, coefficient estimability, or out-of-sample performance.
+</div>
+</section>
+
+</main>
+</div>
+
+</body>
+</html>

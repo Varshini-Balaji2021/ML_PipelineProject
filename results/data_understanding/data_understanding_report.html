@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Data Understanding</title>
+<style>
+body{font-family:Arial;background:#f4f6f8;margin:0;color:#1f2933}
+.page{max-width:1450px;margin:auto;padding:30px}
+.hero{background:linear-gradient(135deg,#17324d,#2b7a78);color:white;padding:30px;border-radius:15px}
+section{background:white;padding:22px;margin-top:20px;border-radius:12px}
+.wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.86rem}
+th{background:#17324d;color:white;padding:8px;text-align:left}
+td{padding:8px;border-bottom:1px solid #ddd}
+</style></head><body><div class="page">
+<div class="hero"><h1>Training Data Understanding Report</h1></div>
+<section><h2>Dataset Summary</h2><div class="wrap"><table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>dataset</th>
+      <th>observations</th>
+      <th>variables</th>
+      <th>numerical_predictors</th>
+      <th>categorical_predictors</th>
+      <th>target_column</th>
+      <th>total_missing_values</th>
+      <th>variables_with_missing_values</th>
+      <th>duplicate_rows</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Training</td>
+      <td>14448</td>
+      <td>10</td>
+      <td>8</td>
+      <td>1</td>
+      <td>median_house_value</td>
+      <td>140</td>
+      <td>1</td>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table></div></section>
+<section><h2>Variable Summary</h2><div class="wrap"><table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>column_name</th>
+      <th>role</th>
+      <th>semantic_type</th>
+      <th>pandas_dtype</th>
+      <th>observations</th>
+      <th>non_missing_count</th>
+      <th>missing_count</th>
+      <th>missing_percentage</th>
+      <th>unique_count</th>
+      <th>example_values</th>
+      <th>minimum</th>
+      <th>maximum</th>
+      <th>mean</th>
+      <th>median</th>
+      <th>standard_deviation</th>
+      <th>skewness</th>
+      <th>kurtosis</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>longitude</td>
+      <td>predictor</td>
+      <td>spatial_coordinate</td>
+      <td>float64</td>
+      <td>14448</td>
+      <td>14448</td>
+      <td>0</td>
+      <td>0.000000</td>
+      <td>812</td>
+      <td>-118.41 | -117.83 | -118.33 | -117.26 | -120.51</td>
+      <td>-124.3000</td>
+      <td>-114.3100</td>
+      <td>-119.573294</td>
+      <td>-118.510</td>
+      <td>2.003203</td>
+      <td>-0.293953</td>
+      <td>-1.336546</td>
+    </tr>
+    <tr>
+      <td>latitude</td>
+      <td>predictor</td>
+      <td>spatial_coordinate</td>
+      <td>float64</td>
+      <td>14448</td>
+      <td>14448</td>
+      <td>0</td>
+      <td>0.000000</td>
+      <td>822</td>
+      <td>33.89 | 34.11 | 34.04 | 33.2 | 35.91</td>
+      <td>32.5500</td>
+      <td>41.9200</td>
+      <td>35.633523</td>
+      <td>34.260</td>
+      <td>2.132504</td>
+      <td>0.459918</td>
+      <td>-1.124066</td>
+    </tr>
+    <tr>
+      <td>housing_median_age</td>
+      <td>predictor</td>
+      <td>discrete_numeric</td>
+      <td>float64</td>
+      <td>14448</td>
+      <td>14448</td>
+      <td>0</td>
+      <td>0.000000</td>
+      <td>52</td>
+      <td>31.0 | 29.0 | 13.0 | 39.0 | 26.0</td>
+      <td>1.0000</td>
+      <td>52.0000</td>
+      <td>28.742594</td>
+      <td>29.000</td>
+      <td>12.574925</td>
+      <td>0.059341</td>
+      <td>-0.796853</td>
+    </tr>
+    <tr>
+      <td>total_rooms</td>
+      <td>predictor</td>
+      <td>count</td>
+      <td>float64</td>
+      <td>14448</td>
+      <td>14448</td>
+      <td>0</td>
+      <td>0.000000</td>
+      <td>5208</td>
+      <td>1428.0 | 2671.0 | 1090.0 | 3163.0 | 768.0</td>
+      <td>6.0000</td>
+      <td>37937.0000</td>
+      <td>2613.580565</td>
+      <td>2111.000</td>
+      <td>2125.841046</td>
+      <td>3.892093</td>
+      <td>29.038327</td>
+    </tr>
+    <tr>
+      <td>total_bedrooms</td>
+      <td>predictor</td>
+      <td>count</td>
+      <td>float64</td>
+      <td>14448</td>
+      <td>14308</td>
+      <td>140</td>
+      <td>0.968992</td>
+      <td>1750</td>
+      <td>320.0 | 437.0 | 251.0 | 725.0 | 162.0</td>
+      <td>2.0000</td>
+      <td>5471.0000</td>
+      <td>533.261672</td>
+      <td>430.000</td>
+      <td>412.858965</td>
+      <td>3.247117</td>
+      <td>18.736443</td>
+    </tr>
+    <tr>
+      <td>population</td>
+      <td>predictor</td>
+      <td>count</td>
+      <td>float64</td>
+      <td>14448</td>
+      <td>14448</td>
+      <td>0</td>
+      <td>0.000000</td>
+      <td>3456</td>
+      <td>677.0 | 1484.0 | 955.0 | 1675.0 | 264.0</td>
+      <td>3.0000</td>
+      <td>35682.0000</td>
+      <td>1413.560839</td>
+      <td>1159.000</td>
+      <td>1114.876264</td>
+      <td>4.936967</td>
+      <td>78.854377</td>
+    </tr>
+    <tr>
+      <td>households</td>
+      <td>predictor</td>
+      <td>count</td>
+      <td>float64</td>
+      <td>14448</td>
+      <td>14448</td>
+      <td>0</td>
+      <td>0.000000</td>
+      <td>1628</td>
+      <td>331.0 | 445.0 | 239.0 | 629.0 | 118.0</td>
+      <td>2.0000</td>
+      <td>5189.0000</td>
+      <td>495.297204</td>
+      <td>406.000</td>
+      <td>376.039520</td>
+      <td>3.231115</td>
+      <td>19.035486</td>
+    </tr>
+    <tr>
+      <td>median_income</td>
+      <td>predictor</td>
+      <td>continuous_numeric</td>
+      <td>float64</td>
+      <td>14448</td>
+      <td>14448</td>
+      <td>0</td>
+      <td>0.000000</td>
+      <td>9817</td>
+      <td>7.2316 | 4.9844 | 2.913 | 2.8214 | 5.3245</td>
+      <td>0.4999</td>
+      <td>15.0001</td>
+      <td>3.873148</td>
+      <td>3.536</td>
+      <td>1.893996</td>
+      <td>1.606024</td>
+      <td>4.605603</td>
+    </tr>
+    <tr>
+      <td>median_house_value</td>
+      <td>target</td>
+      <td>continuous_numeric</td>
+      <td>float64</td>
+      <td>14448</td>
+      <td>14448</td>
+      <td>0</td>
+      <td>0.000000</td>
+      <td>3549</td>
+      <td>500001.0 | 203000.0 | 192500.0 | 121900.0 | 250000.0</td>
+      <td>14999.0000</td>
+      <td>500001.0000</td>
+      <td>207143.478890</td>
+      <td>179900.000</td>
+      <td>115558.181448</td>
+      <td>0.985712</td>
+      <td>0.335741</td>
+    </tr>
+    <tr>
+      <td>ocean_proximity</td>
+      <td>predictor</td>
+      <td>nominal_categorical</td>
+      <td>str</td>
+      <td>14448</td>
+      <td>14448</td>
+      <td>0</td>
+      <td>0.000000</td>
+      <td>5</td>
+      <td>&lt;1H OCEAN | INLAND | NEAR OCEAN | NEAR BAY | ISLAND</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+  </tbody>
+</table></div></section>
+<section><h2>Missing Values</h2><div class="wrap"><table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>column_name</th>
+      <th>missing_count</th>
+      <th>missing_percentage</th>
+      <th>nullable_in_schema</th>
+      <th>documented_treatment</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>total_bedrooms</td>
+      <td>140</td>
+      <td>0.968992</td>
+      <td>True</td>
+      <td>median_imputation_after_split</td>
+    </tr>
+  </tbody>
+</table></div></section>
+<section><h2>Categorical Frequencies</h2><div class="wrap"><table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>column_name</th>
+      <th>category_level</th>
+      <th>frequency</th>
+      <th>percentage</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>ocean_proximity</td>
+      <td>&lt;1H OCEAN</td>
+      <td>6381</td>
+      <td>44.165282</td>
+    </tr>
+    <tr>
+      <td>ocean_proximity</td>
+      <td>INLAND</td>
+      <td>4578</td>
+      <td>31.686047</td>
+    </tr>
+    <tr>
+      <td>ocean_proximity</td>
+      <td>NEAR OCEAN</td>
+      <td>1829</td>
+      <td>12.659192</td>
+    </tr>
+    <tr>
+      <td>ocean_proximity</td>
+      <td>NEAR BAY</td>
+      <td>1658</td>
+      <td>11.475637</td>
+    </tr>
+    <tr>
+      <td>ocean_proximity</td>
+      <td>ISLAND</td>
+      <td>2</td>
+      <td>0.013843</td>
+    </tr>
+  </tbody>
+</table></div></section>
+<section><h2>Logical Checks</h2><div class="wrap"><table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>check_name</th>
+      <th>affected_observations</th>
+      <th>status</th>
+      <th>description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>households_above_population</td>
+      <td>3</td>
+      <td>REVIEW</td>
+      <td>Household count should not normally exceed population.</td>
+    </tr>
+    <tr>
+      <td>bedrooms_above_rooms</td>
+      <td>0</td>
+      <td>PASS</td>
+      <td>Bedrooms should not normally exceed total rooms.</td>
+    </tr>
+    <tr>
+      <td>longitude_below_minimum</td>
+      <td>0</td>
+      <td>PASS</td>
+      <td>Values below schema minimum -180.0.</td>
+    </tr>
+    <tr>
+      <td>longitude_above_maximum</td>
+      <td>0</td>
+      <td>PASS</td>
+      <td>Values above schema maximum 180.0.</td>
+    </tr>
+    <tr>
+      <td>latitude_below_minimum</td>
+      <td>0</td>
+      <td>PASS</td>
+      <td>Values below schema minimum -90.0.</td>
+    </tr>
+    <tr>
+      <td>latitude_above_maximum</td>
+      <td>0</td>
+      <td>PASS</td>
+      <td>Values above schema maximum 90.0.</td>
+    </tr>
+    <tr>
+      <td>housing_median_age_below_minimum</td>
+      <td>0</td>
+      <td>PASS</td>
+      <td>Values below schema minimum 0.0.</td>
+    </tr>
+    <tr>
+      <td>housing_median_age_non_whole_values</td>
+      <td>0</td>
+      <td>PASS</td>
+      <td>Checks the whole-number requirement.</td>
+    </tr>
+    <tr>
+      <td>total_rooms_below_minimum</td>
+      <td>0</td>
+      <td>PASS</td>
+      <td>Values below schema minimum 0.0.</td>
+    </tr>
+    <tr>
+      <td>total_rooms_non_whole_values</td>
+      <td>0</td>
+      <td>PASS</td>
+      <td>Checks the whole-number requirement.</td>
+    </tr>
+    <tr>
+      <td>total_bedrooms_below_minimum</td>
+      <td>0</td>
+      <td>PASS</td>
+      <td>Values below schema minimum 0.0.</td>
+    </tr>
+    <tr>
+      <td>total_bedrooms_non_whole_values</td>
+      <td>0</td>
+      <td>PASS</td>
+      <td>Checks the whole-number requirement.</td>
+    </tr>
+    <tr>
+      <td>population_below_minimum</td>
+      <td>0</td>
+      <td>PASS</td>
+      <td>Values below schema minimum 0.0.</td>
+    </tr>
+    <tr>
+      <td>population_non_whole_values</td>
+      <td>0</td>
+      <td>PASS</td>
+      <td>Checks the whole-number requirement.</td>
+    </tr>
+    <tr>
+      <td>households_below_minimum</td>
+      <td>0</td>
+      <td>PASS</td>
+      <td>Values below schema minimum 0.0.</td>
+    </tr>
+    <tr>
+      <td>households_non_whole_values</td>
+      <td>0</td>
+      <td>PASS</td>
+      <td>Checks the whole-number requirement.</td>
+    </tr>
+    <tr>
+      <td>median_income_below_minimum</td>
+      <td>0</td>
+      <td>PASS</td>
+      <td>Values below schema minimum 0.0.</td>
+    </tr>
+    <tr>
+      <td>median_house_value_below_minimum</td>
+      <td>0</td>
+      <td>PASS</td>
+      <td>Values below schema minimum 0.0.</td>
+    </tr>
+  </tbody>
+</table></div></section>
+<section><h2>Recommendations</h2><ul><li>Missing values are present in: total_bedrooms. Treat them only after the training split.</li><li>Logical checks requiring review: households_above_population.</li><li>No data were modified during data understanding.</li></ul></section>
+</div></body></html>

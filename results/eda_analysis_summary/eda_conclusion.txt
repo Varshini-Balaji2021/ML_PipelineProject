@@ -1,0 +1,40 @@
+EXECUTIVE EDA SUMMARY
+======================================================================
+
+The exploratory analysis suggests that:
+
+✓ All schema-approved predictors should remain candidates at this stage.
+
+✓ Weak marginal correlation is not treated as evidence that a predictor
+  is unimportant. Joint, nonlinear, interaction, categorical, and spatial
+  contributions remain possible.
+
+✓ 7 highly associated predictor pair(s) require
+  VIF and condition-number assessment before inferential coefficient
+  interpretation.
+
+✓ The provisional LOWESS screen indicates material curvature for:
+  longitude, latitude, total_rooms, total_bedrooms, households, housing_median_age, population, median_income.
+  These findings require visual and model-based confirmation.
+
+✓ 6 automatically generated ratio variable(s) have direct
+  business meaning, while 2 interaction hypothesis(es)
+  should be evaluated rather than imposed.
+
+✓ Potential extreme observations should generally be retained for machine
+  learning and examined through sensitivity analysis for inference.
+
+Recommended modelling direction:
+
+Machine Learning
+    Candidate variables → Feature generation → Training → Validation
+    → Tuning → Frozen model → Test → Operational use
+
+Inferential Analysis
+    Linear baseline → Multicollinearity assessment → RESET
+    → Diagnostics or alternative nonlinear specification
+    → Model comparison → Validation → Test
+    → Full-sample estimation → Interpretation
+
+EDA guides the next stage but does not determine the final model.
+======================================================================

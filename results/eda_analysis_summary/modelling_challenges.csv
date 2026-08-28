@@ -1,0 +1,10 @@
+challenge_group,challenge,evidence,implication
+Statistical issue,Response asymmetry,Response skewness = 0.9857.,Consider transformation only when it improves validation or specification adequacy.
+Data issue,Missing predictor values,Missing values remain in: total_bedrooms,Fit imputation using training data only.
+Statistical issue,High predictor association,7 predictor pair(s) have |r| >= 0.80.,Run VIF and condition-number checks for inference; retain for ML unless validation indicates otherwise.
+Statistical issue,Possible nonlinear relationships,"longitude, latitude, total_rooms, total_bedrooms, households, housing_median_age, population, median_income","Compare linear, nonlinear polynomial, and smooth specifications; treat the LOWESS screen as provisional."
+Data issue,Potential extreme observations,"total_rooms, total_bedrooms, households, population, median_house_value",Retain for prediction unless domain evidence supports removal; perform sensitivity analysis for inference.
+Statistical issue,Potential omitted variables,"The available predictors may not fully measure local quality, accessibility, institutional conditions, or market expectations.",Avoid causal claims and document the limits of the available data when interpreting coefficients.
+Statistical issue,Possible interaction effects,"Geographic, socioeconomic, and categorical variables may modify one another's relationships with the response.",Evaluate selected interactions as hypotheses and retain them only when theoretically meaningful and empirically supported.
+Data issue,Measurement limitations,Several variables are aggregated summaries rather than individual-level measurements.,Interpret findings at the observational-unit level and avoid individual-level conclusions.
+Business / structural issue,Spatial heterogeneity,Coordinates exhibit strong joint geographic structure.,Purely linear spatial effects may be insufficient; regional segmentation or smooth spatial effects may matter.

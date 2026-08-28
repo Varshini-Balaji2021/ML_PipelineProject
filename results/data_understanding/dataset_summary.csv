@@ -1,0 +1,2 @@
+dataset,observations,variables,numerical_predictors,categorical_predictors,target_column,total_missing_values,variables_with_missing_values,duplicate_rows
+Training,14448,10,8,1,median_house_value,140,1,0

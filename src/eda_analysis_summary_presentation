@@ -1,0 +1,2321 @@
+"""
+eda_analysis_summary.py
+
+PURPOSE
+-------
+Translate EDA outputs into a domain-neutral analytical notebook that explains:
+
+- what relationships and patterns exist;
+- why each variable remains a candidate;
+- what business meaning the patterns may have;
+- which modelling challenges are likely;
+- what deterministic features may be created;
+- which interactions remain exploratory hypotheses;
+- how the predictive and inferential branches should proceed.
+
+This version emphasises presentation and narrative clarity while preserving
+the underlying calculations.
+
+RUN
+---
+    python src/eda_analysis_summary.py
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+from sys import path
+from typing import Any
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
+from statsmodels.nonparametric.smoothers_lowess import lowess
+
+
+# =========================================================
+# 1. Project paths and schema
+# =========================================================
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+path.insert(0, str(PROJECT_ROOT))
+
+from src.semantic_schema import (  # noqa: E402
+    CATEGORICAL_COLUMNS,
+    NUMERICAL_COLUMNS,
+    SEMANTIC_SCHEMA,
+    TARGET_COLUMN,
+)
+
+TRAIN_PATH = PROJECT_ROOT / "data" / "splits" / "train.csv"
+EDA_DIR = PROJECT_ROOT / "results" / "eda"
+OUTPUT_DIR = PROJECT_ROOT / "results" / "eda_analysis_summary"
+FIGURES_DIR = OUTPUT_DIR / "figures"
+
+CANDIDATE_VARIABLES_PATH = OUTPUT_DIR / "candidate_explanatory_variables.csv"
+CORRELATION_SCREEN_PATH = OUTPUT_DIR / "predictor_correlation_screen.csv"
+NONLINEARITY_SCREEN_PATH = OUTPUT_DIR / "nonlinearity_screen.csv"
+FEATURE_ENGINEERING_PATH = OUTPUT_DIR / "feature_engineering_recommendations.csv"
+MODELLING_CHALLENGES_PATH = OUTPUT_DIR / "modelling_challenges.csv"
+BUSINESS_INTERPRETATION_PATH = OUTPUT_DIR / "business_interpretation.csv"
+MODEL_RECOMMENDATIONS_PATH = OUTPUT_DIR / "model_development_recommendations.csv"
+CONCLUSION_PATH = OUTPUT_DIR / "eda_conclusion.txt"
+MARKDOWN_PATH = OUTPUT_DIR / "analytical_summary.md"
+HTML_PATH = OUTPUT_DIR / "analytical_summary.html"
+
+
+# =========================================================
+# 2. Thresholds
+# =========================================================
+
+HIGH_PAIRWISE_CORRELATION = 0.80
+MATERIAL_OUTLIER_PERCENTAGE = 5.0
+
+LOWESS_SAMPLE_SIZE = 5000
+LOWESS_FRACTION = 0.25
+
+MILD_CURVATURE_THRESHOLD = 0.08
+MODERATE_CURVATURE_THRESHOLD = 0.16
+STRONG_CURVATURE_THRESHOLD = 0.28
+
+
+# =========================================================
+# 3. Helpers
+# =========================================================
+
+def require_training_data() -> None:
+    if not TRAIN_PATH.exists():
+        raise FileNotFoundError(
+            f"Training data not found: {TRAIN_PATH}\n"
+            "Run split.py first."
+        )
+
+
+def read_optional_csv(filename: str) -> pd.DataFrame | None:
+    file_path = EDA_DIR / filename
+    if not file_path.exists():
+        return None
+
+    data = pd.read_csv(file_path)
+    return None if data.empty else data
+
+
+def numeric_columns(data: pd.DataFrame) -> list[str]:
+    return [
+        column
+        for column in data.columns
+        if pd.api.types.is_numeric_dtype(data[column].dtype)
+    ]
+
+
+def calculate_target_correlations(data: pd.DataFrame) -> pd.DataFrame:
+    matrix = data.select_dtypes(include="number").corr()
+
+    output = (
+        matrix[TARGET_COLUMN]
+        .drop(TARGET_COLUMN)
+        .sort_values(key=lambda values: values.abs(), ascending=False)
+        .rename("correlation_with_target")
+        .reset_index()
+        .rename(columns={"index": "feature"})
+    )
+
+    output["absolute_correlation"] = output["correlation_with_target"].abs()
+    return output
+
+
+def calculate_correlation_matrix(data: pd.DataFrame) -> pd.DataFrame:
+    return data.select_dtypes(include="number").corr()
+
+
+def calculate_outlier_summary(data: pd.DataFrame) -> pd.DataFrame:
+    rows = []
+
+    for column in numeric_columns(data):
+        series = pd.to_numeric(data[column], errors="coerce")
+
+        q1 = float(series.quantile(0.25))
+        q3 = float(series.quantile(0.75))
+        iqr = q3 - q1
+
+        lower = q1 - 1.5 * iqr
+        upper = q3 + 1.5 * iqr
+
+        flag = (
+            series.notna()
+            & ((series < lower) | (series > upper))
+        )
+
+        rows.append(
+            {
+                "variable": column,
+                "combined_flag_count": int(flag.sum()),
+                "combined_flag_percentage": float(flag.mean() * 100),
+            }
+        )
+
+    return pd.DataFrame(rows)
+
+
+def calculate_distribution_summary(data: pd.DataFrame) -> pd.DataFrame:
+    rows = []
+
+    for column in numeric_columns(data):
+        series = pd.to_numeric(data[column], errors="coerce")
+
+        rows.append(
+            {
+                "variable": column,
+                "skewness": float(series.skew()),
+                "kurtosis": float(series.kurt()),
+            }
+        )
+
+    return pd.DataFrame(rows)
+
+
+# =========================================================
+# 4. Marginal association and correlation screen
+# =========================================================
+
+def classify_marginal_linear_association(
+    absolute_correlation: float,
+) -> str:
+    if not np.isfinite(absolute_correlation):
+        return "Not applicable"
+
+    if absolute_correlation >= 0.50:
+        return "Strong marginal linear association"
+
+    if absolute_correlation >= 0.20:
+        return "Moderate marginal linear association"
+
+    if absolute_correlation >= 0.10:
+        return "Weak marginal linear association"
+
+    return "Very weak marginal linear association"
+
+
+def create_predictor_correlation_screen(
+    correlation_matrix: pd.DataFrame,
+) -> pd.DataFrame:
+    predictors = [
+        column
+        for column in correlation_matrix.columns
+        if column != TARGET_COLUMN
+    ]
+
+    rows = []
+
+    for first_index, first in enumerate(predictors):
+        for second in predictors[first_index + 1:]:
+            correlation = float(correlation_matrix.loc[first, second])
+
+            if abs(correlation) < HIGH_PAIRWISE_CORRELATION:
+                continue
+
+            rows.append(
+                {
+                    "feature_1": first,
+                    "feature_2": second,
+                    "correlation": correlation,
+                    "absolute_correlation": abs(correlation),
+                    "eda_interpretation": "High pairwise association",
+                    "machine_learning_implication": (
+                        "Retain initially. Predictive models may use both "
+                        "variables if validation performance benefits."
+                    ),
+                    "inferential_implication": (
+                        "Do not remove at EDA stage. Assess VIF, condition "
+                        "number, estimability, and theory before coefficient "
+                        "interpretation."
+                    ),
+                }
+            )
+
+    return pd.DataFrame(
+        rows,
+        columns=[
+            "feature_1",
+            "feature_2",
+            "correlation",
+            "absolute_correlation",
+            "eda_interpretation",
+            "machine_learning_implication",
+            "inferential_implication",
+        ],
+    )
+
+
+# =========================================================
+# 5. LOWESS curvature screen
+# =========================================================
+
+def lowess_curvature_score(
+    feature: pd.Series,
+    target: pd.Series,
+) -> tuple[float, pd.DataFrame]:
+    frame = pd.DataFrame(
+        {
+            "feature": pd.to_numeric(feature, errors="coerce"),
+            "target": pd.to_numeric(target, errors="coerce"),
+        }
+    ).dropna()
+
+    if len(frame) < 50:
+        return float("nan"), pd.DataFrame()
+
+    if len(frame) > LOWESS_SAMPLE_SIZE:
+        frame = frame.sample(
+            n=LOWESS_SAMPLE_SIZE,
+            random_state=42,
+        )
+
+    frame = frame.sort_values("feature")
+
+    x = frame["feature"].to_numpy(dtype="float64")
+    y = frame["target"].to_numpy(dtype="float64")
+
+    if np.isclose(np.std(x), 0):
+        return 0.0, pd.DataFrame()
+
+    slope, intercept = np.polyfit(x, y, deg=1)
+    linear_fitted = intercept + slope * x
+
+    smooth = lowess(
+        endog=y,
+        exog=x,
+        frac=LOWESS_FRACTION,
+        return_sorted=True,
+    )
+
+    lowess_fitted = np.interp(
+        x,
+        smooth[:, 0],
+        smooth[:, 1],
+    )
+
+    target_std = float(np.std(y, ddof=1))
+
+    if np.isclose(target_std, 0):
+        score = 0.0
+    else:
+        score = float(
+            np.sqrt(
+                np.mean((lowess_fitted - linear_fitted) ** 2)
+            )
+            / target_std
+        )
+
+    plot_data = pd.DataFrame(
+        {
+            "feature": x,
+            "target": y,
+            "linear_fitted": linear_fitted,
+            "lowess_fitted": lowess_fitted,
+        }
+    )
+
+    return score, plot_data
+
+
+def classify_curvature(score: float) -> str:
+    if not np.isfinite(score):
+        return "Insufficient data"
+
+    if score < MILD_CURVATURE_THRESHOLD:
+        return "Nearly linear"
+
+    if score < MODERATE_CURVATURE_THRESHOLD:
+        return "Mild curvature"
+
+    if score < STRONG_CURVATURE_THRESHOLD:
+        return "Moderate curvature"
+
+    return "Strong nonlinear pattern"
+
+
+def curvature_implication(classification: str) -> str:
+    if classification == "Nearly linear":
+        return "A linear effect is a reasonable initial approximation."
+
+    if classification == "Mild curvature":
+        return (
+            "Retain the linear baseline and inspect a polynomial "
+            "or smooth alternative."
+        )
+
+    if classification == "Moderate curvature":
+        return "Evaluate nonlinear polynomial and GAM effects."
+
+    if classification == "Strong nonlinear pattern":
+        return (
+            "Do not rely only on a linear coefficient; compare "
+            "nonlinear OLS and GAM specifications."
+        )
+
+    return "No modelling implication available."
+
+
+
+def create_nonlinearity_screen(
+    data: pd.DataFrame,
+) -> pd.DataFrame:
+    """
+    Create a provisional LOWESS deviation screen.
+
+    The automated pattern is not treated as the analyst's final decision.
+    The generated figure and analyst-review fields are retained so that
+    visual judgement, RESET, diagnostics, and validation can confirm or
+    overturn the automated screen.
+    """
+
+    rows = []
+
+    for feature in NUMERICAL_COLUMNS:
+        if feature not in data.columns:
+            continue
+
+        score, plot_data = lowess_curvature_score(
+            data[feature],
+            data[TARGET_COLUMN],
+        )
+
+        automated_screen = classify_curvature(score)
+        figure_name = f"lowess_{feature}.png"
+
+        rows.append(
+            {
+                "feature": feature,
+                "lowess_deviation_score": score,
+                "automated_screen": automated_screen,
+                "visual_evidence": (
+                    "Review the corresponding LOWESS figure"
+                ),
+                "analyst_decision": "Not reviewed",
+                "provisional_model_implication": (
+                    curvature_implication(automated_screen)
+                ),
+                "figure_file": figure_name,
+                "caution": (
+                    "The automated screen is provisional. Confirm using "
+                    "visual inspection, RESET, model diagnostics, validation, "
+                    "and test evidence."
+                ),
+                # Retained for downstream computational compatibility.
+                "exploratory_pattern": automated_screen,
+            }
+        )
+
+        if plot_data.empty:
+            continue
+
+        plt.figure(figsize=(9, 6))
+        plt.scatter(
+            plot_data["feature"],
+            plot_data["target"],
+            alpha=0.15,
+            s=10,
+            label="Observations",
+        )
+        plt.plot(
+            plot_data["feature"],
+            plot_data["linear_fitted"],
+            linewidth=2,
+            label="Linear fit",
+        )
+        plt.plot(
+            plot_data["feature"],
+            plot_data["lowess_fitted"],
+            linewidth=2,
+            label="LOWESS",
+        )
+        plt.xlabel(feature)
+        plt.ylabel(TARGET_COLUMN)
+        plt.title(f"Exploratory Linearity Review: {feature}")
+        plt.legend()
+        plt.tight_layout()
+        plt.savefig(
+            FIGURES_DIR / figure_name,
+            dpi=300,
+        )
+        plt.close()
+
+    return (
+        pd.DataFrame(rows)
+        .sort_values("lowess_deviation_score", ascending=False)
+        .reset_index(drop=True)
+    )
+
+def schema_based_reason(feature: str) -> str:
+    rules = SEMANTIC_SCHEMA.get(feature, {})
+    semantic_type = str(rules.get("semantic_type", "predictor"))
+
+    if semantic_type == "spatial_coordinate":
+        return (
+            "Geographic position may capture regional market structure "
+            "and nonlinear spatial effects."
+        )
+
+    if semantic_type == "count":
+        return (
+            "The variable may contribute through scale, density, ratio, "
+            "or interaction effects."
+        )
+
+    if semantic_type == "nominal_categorical":
+        return (
+            "Systematic differences between categories may explain "
+            "house-price variation."
+        )
+
+    if semantic_type == "discrete_numeric":
+        return (
+            "The variable may have a nonlinear or piecewise relationship "
+            "with house value."
+        )
+
+    return (
+        "The variable remains conceptually relevant and should be assessed "
+        "jointly with other predictors."
+    )
+
+
+def expected_relationship(feature: str) -> str:
+    mapping = {
+        "median_income": "Expected positive association with house value.",
+        "longitude": "Expected regional and nonlinear spatial variation.",
+        "latitude": "Expected regional and nonlinear spatial variation.",
+        "housing_median_age": "Possible nonlinear or threshold effect.",
+        "total_rooms": "Ambiguous raw-scale effect; ratios may be more informative.",
+        "total_bedrooms": "Ambiguous raw-scale effect; ratios may be more informative.",
+        "population": "Possible density and congestion effect.",
+        "households": "Possible block-size and occupancy effect.",
+        "ocean_proximity": "Expected systematic differences across categories.",
+    }
+
+    return mapping.get(
+        feature,
+        "Direction should be determined empirically.",
+    )
+
+
+def create_candidate_explanatory_variables(
+    data: pd.DataFrame,
+    target_correlations: pd.DataFrame,
+    nonlinearity: pd.DataFrame,
+    outliers: pd.DataFrame,
+) -> pd.DataFrame:
+    correlation_lookup = (
+        target_correlations.set_index("feature")[
+            "correlation_with_target"
+        ].to_dict()
+    )
+
+    curvature_lookup = (
+        nonlinearity.set_index("feature")[
+            "exploratory_pattern"
+        ].to_dict()
+    )
+
+    outlier_lookup = (
+        outliers.set_index("variable")[
+            "combined_flag_percentage"
+        ].to_dict()
+        if not outliers.empty
+        else {}
+    )
+
+    rows = []
+
+    for feature in data.columns:
+        if feature == TARGET_COLUMN:
+            continue
+
+        correlation = float(
+            correlation_lookup.get(feature, np.nan)
+        )
+
+        absolute_correlation = (
+            abs(correlation)
+            if np.isfinite(correlation)
+            else np.nan
+        )
+
+        rows.append(
+            {
+                "feature": feature,
+                "semantic_type": SEMANTIC_SCHEMA.get(
+                    feature,
+                    {},
+                ).get(
+                    "semantic_type",
+                    "",
+                ),
+                "business_rationale": schema_based_reason(feature),
+                "expected_relationship": expected_relationship(feature),
+                "correlation_with_target": correlation,
+                "observed_linear_association": (
+                    classify_marginal_linear_association(
+                        absolute_correlation
+                    )
+                    if np.isfinite(absolute_correlation)
+                    else "Categorical predictor"
+                ),
+                "exploratory_nonlinearity": curvature_lookup.get(
+                    feature,
+                    "Not applicable",
+                ),
+                "potential_outlier_percentage": float(
+                    outlier_lookup.get(feature, 0.0)
+                ),
+                "candidate_status": "RETAIN AS CANDIDATE",
+                "final_decision_rule": (
+                    "Use validation for ML; use theory, VIF/estimability, "
+                    "specification, diagnostics, robust inference, and test "
+                    "evidence for inference."
+                ),
+            }
+        )
+
+    return pd.DataFrame(rows)
+
+
+# =========================================================
+# 7. Feature engineering
+# =========================================================
+
+def create_feature_engineering_recommendations(
+    data: pd.DataFrame,
+) -> pd.DataFrame:
+    candidates = [
+        {
+            "recommended_feature": "rooms_per_household",
+            "formula": "total_rooms / households",
+            "required_columns": {"total_rooms", "households"},
+            "business_meaning": (
+                "Average housing-space availability per household."
+            ),
+            "recommendation_type": "DETERMINISTIC RATIO",
+            "implementation_rule": "Create automatically",
+        },
+        {
+            "recommended_feature": "bedrooms_per_room",
+            "formula": "total_bedrooms / total_rooms",
+            "required_columns": {"total_bedrooms", "total_rooms"},
+            "business_meaning": (
+                "Internal composition of the housing stock."
+            ),
+            "recommendation_type": "DETERMINISTIC RATIO",
+            "implementation_rule": "Create automatically",
+        },
+        {
+            "recommended_feature": "population_per_household",
+            "formula": "population / households",
+            "required_columns": {"population", "households"},
+            "business_meaning": "Average household occupancy.",
+            "recommendation_type": "DETERMINISTIC RATIO",
+            "implementation_rule": "Create automatically",
+        },
+        {
+            "recommended_feature": "bedrooms_per_household",
+            "formula": "total_bedrooms / households",
+            "required_columns": {"total_bedrooms", "households"},
+            "business_meaning": "Bedroom availability per household.",
+            "recommendation_type": "DETERMINISTIC RATIO",
+            "implementation_rule": "Create automatically",
+        },
+        {
+            "recommended_feature": "rooms_per_person",
+            "formula": "total_rooms / population",
+            "required_columns": {"total_rooms", "population"},
+            "business_meaning": "Housing-space availability per person.",
+            "recommendation_type": "DETERMINISTIC RATIO",
+            "implementation_rule": "Create automatically",
+        },
+        {
+            "recommended_feature": "bedrooms_per_person",
+            "formula": "total_bedrooms / population",
+            "required_columns": {"total_bedrooms", "population"},
+            "business_meaning": "Bedroom availability per person.",
+            "recommendation_type": "DETERMINISTIC RATIO",
+            "implementation_rule": "Create automatically",
+        },
+        {
+            "recommended_feature": "longitude_latitude_interaction",
+            "formula": "longitude × latitude",
+            "required_columns": {"longitude", "latitude"},
+            "business_meaning": (
+                "Exploratory interaction representing joint location."
+            ),
+            "recommendation_type": "EXPLORATORY INTERACTION",
+            "implementation_rule": (
+                "Evaluate as a candidate, not as a mandatory feature"
+            ),
+        },
+        {
+            "recommended_feature": "income_ocean_proximity_interaction",
+            "formula": "median_income × ocean_proximity indicators",
+            "required_columns": {"median_income", "ocean_proximity"},
+            "business_meaning": (
+                "Tests whether income effects differ by coastal category."
+            ),
+            "recommendation_type": "EXPLORATORY INTERACTION",
+            "implementation_rule": (
+                "Evaluate as a candidate, not as a mandatory feature"
+            ),
+        },
+    ]
+
+    rows = []
+
+    for candidate in candidates:
+        if not candidate["required_columns"].issubset(data.columns):
+            continue
+
+        rows.append(
+            {
+                **{
+                    key: value
+                    for key, value in candidate.items()
+                    if key != "required_columns"
+                },
+                "caution": (
+                    "Protect against zero denominators and fit all "
+                    "model-dependent transformations on training data only."
+                ),
+            }
+        )
+
+    return pd.DataFrame(rows)
+
+
+# =========================================================
+# 8. Business interpretation
+# =========================================================
+
+
+def create_business_interpretation(
+    target_correlations: pd.DataFrame,
+    categorical_summary: pd.DataFrame | None,
+) -> pd.DataFrame:
+    """
+    Translate observed patterns into possible explanations and decisions.
+
+    The language remains associative rather than causal.
+    """
+
+    correlation_lookup = (
+        target_correlations.set_index("feature")[
+            "correlation_with_target"
+        ].to_dict()
+    )
+
+    rows = []
+
+    if "median_income" in correlation_lookup:
+        rows.append(
+            {
+                "feature_or_pattern": "median_income",
+                "observed_pattern": (
+                    f"Correlation with the response = "
+                    f"{correlation_lookup['median_income']:.4f}."
+                ),
+                "possible_explanation": (
+                    "The variable may capture purchasing power, local demand, "
+                    "neighbourhood quality, access to services, amenities, "
+                    "and employment opportunities."
+                ),
+                "business_implication": (
+                    "Useful for segmentation, pricing, location assessment, "
+                    "affordability analysis, and scenario design."
+                ),
+                "inferential_caution": (
+                    "The relationship is associative and may overlap with "
+                    "location and omitted neighbourhood characteristics."
+                ),
+            }
+        )
+
+    if (
+        "latitude" in correlation_lookup
+        or "longitude" in correlation_lookup
+    ):
+        rows.append(
+            {
+                "feature_or_pattern": "latitude and longitude",
+                "observed_pattern": (
+                    "Weak marginal linear associations, strong joint "
+                    "association, and visually curved response patterns."
+                ),
+                "possible_explanation": (
+                    "The outcome may vary across regional markets rather "
+                    "than following one uniform geographic gradient."
+                ),
+                "business_implication": (
+                    "Supports regional segmentation, territory planning, "
+                    "location strategy, and geographically differentiated "
+                    "decision rules."
+                ),
+                "inferential_caution": (
+                    "Separate linear coefficients may not adequately capture "
+                    "spatial structure or local dependence."
+                ),
+            }
+        )
+
+    if categorical_summary is not None and not categorical_summary.empty:
+        category_means = (
+            categorical_summary[
+                ["category_level", "target_mean"]
+            ]
+            .sort_values("target_mean", ascending=False)
+        )
+
+        highest = category_means.iloc[0]
+        lowest = category_means.iloc[-1]
+
+        rows.append(
+            {
+                "feature_or_pattern": "ocean_proximity",
+                "observed_pattern": (
+                    f"Highest mean response category: "
+                    f"{highest['category_level']}; lowest: "
+                    f"{lowest['category_level']}."
+                ),
+                "possible_explanation": (
+                    "The categories may capture amenity value, scarcity, "
+                    "accessibility, and geographic market segmentation."
+                ),
+                "business_implication": (
+                    "Useful for differentiated valuation, pricing bands, "
+                    "portfolio design, and location-based decisions."
+                ),
+                "inferential_caution": (
+                    "Category differences may overlap with income, coordinates, "
+                    "and unmeasured neighbourhood characteristics."
+                ),
+            }
+        )
+
+    rows.append(
+        {
+            "feature_or_pattern": (
+                "housing stock and occupancy variables"
+            ),
+            "observed_pattern": (
+                "Room, bedroom, household, and population counts are "
+                "strongly associated with one another."
+            ),
+            "possible_explanation": (
+                "Raw counts partly measure the size of the observational unit. "
+                "Ratios may better represent density, crowding, composition, "
+                "and resource availability."
+            ),
+            "business_implication": (
+                "Supports occupancy analysis, capacity assessment, "
+                "neighbourhood comparison, and more interpretable indicators."
+            ),
+            "inferential_caution": (
+                "VIF and estimability must be assessed before interpreting "
+                "their coefficients separately."
+            ),
+        }
+    )
+
+    return pd.DataFrame(rows)
+
+
+def create_modelling_challenges(
+    data: pd.DataFrame,
+    distributions: pd.DataFrame,
+    correlation_screen: pd.DataFrame,
+    nonlinearity: pd.DataFrame,
+    outliers: pd.DataFrame,
+) -> pd.DataFrame:
+    """Group likely challenges into data, statistical, and structural issues."""
+
+    rows = []
+
+    target_row = distributions.loc[
+        distributions["variable"] == TARGET_COLUMN
+    ]
+
+    if not target_row.empty:
+        skewness = float(target_row.iloc[0]["skewness"])
+
+        if abs(skewness) >= 0.75:
+            rows.append(
+                {
+                    "challenge_group": "Statistical issue",
+                    "challenge": "Response asymmetry",
+                    "evidence": f"Response skewness = {skewness:.4f}.",
+                    "implication": (
+                        "Consider transformation only when it improves "
+                        "validation or specification adequacy."
+                    ),
+                }
+            )
+
+    if int(data.isna().sum().sum()) > 0:
+        rows.append(
+            {
+                "challenge_group": "Data issue",
+                "challenge": "Missing predictor values",
+                "evidence": (
+                    "Missing values remain in: "
+                    + ", ".join(
+                        data.columns[
+                            data.isna().sum() > 0
+                        ].tolist()
+                    )
+                ),
+                "implication": (
+                    "Fit imputation using training data only."
+                ),
+            }
+        )
+
+    if not correlation_screen.empty:
+        rows.append(
+            {
+                "challenge_group": "Statistical issue",
+                "challenge": "High predictor association",
+                "evidence": (
+                    f"{len(correlation_screen)} predictor pair(s) "
+                    f"have |r| >= {HIGH_PAIRWISE_CORRELATION:.2f}."
+                ),
+                "implication": (
+                    "Run VIF and condition-number checks for inference; "
+                    "retain for ML unless validation indicates otherwise."
+                ),
+            }
+        )
+
+    curved = nonlinearity.loc[
+        nonlinearity["exploratory_pattern"].isin(
+            ["Moderate curvature", "Strong nonlinear pattern"]
+        ),
+        "feature",
+    ].tolist()
+
+    if curved:
+        rows.append(
+            {
+                "challenge_group": "Statistical issue",
+                "challenge": "Possible nonlinear relationships",
+                "evidence": ", ".join(curved),
+                "implication": (
+                    "Compare linear, nonlinear polynomial, and smooth "
+                    "specifications; treat the LOWESS screen as provisional."
+                ),
+            }
+        )
+
+    high_outlier = outliers.loc[
+        outliers["combined_flag_percentage"]
+        >= MATERIAL_OUTLIER_PERCENTAGE
+    ]
+
+    if not high_outlier.empty:
+        rows.append(
+            {
+                "challenge_group": "Data issue",
+                "challenge": "Potential extreme observations",
+                "evidence": ", ".join(
+                    high_outlier["variable"].tolist()
+                ),
+                "implication": (
+                    "Retain for prediction unless domain evidence supports "
+                    "removal; perform sensitivity analysis for inference."
+                ),
+            }
+        )
+
+    rows.append(
+        {
+            "challenge_group": "Statistical issue",
+            "challenge": "Potential omitted variables",
+            "evidence": (
+                "The available predictors may not fully measure local quality, "
+                "accessibility, institutional conditions, or market expectations."
+            ),
+            "implication": (
+                "Avoid causal claims and document the limits of the available "
+                "data when interpreting coefficients."
+            ),
+        }
+    )
+
+    rows.append(
+        {
+            "challenge_group": "Statistical issue",
+            "challenge": "Possible interaction effects",
+            "evidence": (
+                "Geographic, socioeconomic, and categorical variables may "
+                "modify one another's relationships with the response."
+            ),
+            "implication": (
+                "Evaluate selected interactions as hypotheses and retain them "
+                "only when theoretically meaningful and empirically supported."
+            ),
+        }
+    )
+
+    rows.append(
+        {
+            "challenge_group": "Data issue",
+            "challenge": "Measurement limitations",
+            "evidence": (
+                "Several variables are aggregated summaries rather than "
+                "individual-level measurements."
+            ),
+            "implication": (
+                "Interpret findings at the observational-unit level and avoid "
+                "individual-level conclusions."
+            ),
+        }
+    )
+
+    if {"latitude", "longitude"}.issubset(data.columns):
+        rows.append(
+            {
+                "challenge_group": "Business / structural issue",
+                "challenge": "Spatial heterogeneity",
+                "evidence": (
+                    "Coordinates exhibit strong joint geographic structure."
+                ),
+                "implication": (
+                    "Purely linear spatial effects may be insufficient; "
+                    "regional segmentation or smooth spatial effects may matter."
+                ),
+            }
+        )
+
+    return pd.DataFrame(rows)
+
+def create_model_development_recommendations(
+    correlation_screen: pd.DataFrame,
+    nonlinearity: pd.DataFrame,
+) -> pd.DataFrame:
+    nonlinear_features = nonlinearity.loc[
+        nonlinearity["exploratory_pattern"].isin(
+            ["Moderate curvature", "Strong nonlinear pattern"]
+        ),
+        "feature",
+    ].tolist()
+
+    rows = [
+        {
+            "sequence": 1,
+            "analytical_branch": "Both",
+            "stage": "Candidate explanatory variables",
+            "recommendation": (
+                "Begin with all schema-approved predictors."
+            ),
+            "reason": (
+                "EDA is a screening stage. Weak marginal correlation "
+                "does not justify exclusion."
+            ),
+        },
+        {
+            "sequence": 2,
+            "analytical_branch": "Both",
+            "stage": "Feature engineering",
+            "recommendation": (
+                "Create deterministic ratios and evaluate selected "
+                "interaction hypotheses."
+            ),
+            "reason": (
+                "Ratios may separate block size from housing density "
+                "and occupancy conditions."
+            ),
+        },
+        {
+            "sequence": 3,
+            "analytical_branch": "Machine Learning",
+            "stage": "Training and validation",
+            "recommendation": (
+                "Retain the complete engineered feature set initially; "
+                "train, tune, validate, freeze, and test."
+            ),
+            "reason": (
+                "Predictive contribution may arise through joint, nonlinear, "
+                "and interaction effects."
+            ),
+        },
+        {
+            "sequence": 4,
+            "analytical_branch": "Inferential",
+            "stage": "Linear baseline",
+            "recommendation": (
+                "Estimate Linear OLS and assess VIF and condition number."
+            ),
+            "reason": (
+                f"{len(correlation_screen)} high-correlation predictor "
+                "pair(s) were identified."
+            ),
+        },
+        {
+            "sequence": 5,
+            "analytical_branch": "Inferential",
+            "stage": "Specification decision",
+            "recommendation": (
+                "Apply RESET. If the linear model passes, proceed to "
+                "diagnostics and robust inference."
+            ),
+            "reason": (
+                "A valid linear model should be retained when specification "
+                "and diagnostics are acceptable."
+            ),
+        },
+        {
+            "sequence": 6,
+            "analytical_branch": "Inferential",
+            "stage": "Alternative specification",
+            "recommendation": (
+                "If Linear OLS fails, evaluate nonlinear polynomial OLS "
+                "and then GAM."
+            ),
+            "reason": (
+                "Exploratory curvature appears in: "
+                + (
+                    ", ".join(nonlinear_features)
+                    if nonlinear_features
+                    else "no predictors above the selected threshold"
+                )
+                + "."
+            ),
+        },
+        {
+            "sequence": 7,
+            "analytical_branch": "Inferential",
+            "stage": "Model-family evaluation",
+            "recommendation": (
+                "Diagnose each valid family, compare models, validate, test, "
+                "and then estimate the selected model on the full sample."
+            ),
+            "reason": (
+                "Model choice should reflect specification adequacy, "
+                "diagnostics, interpretability, and out-of-sample evidence."
+            ),
+        },
+    ]
+
+    return pd.DataFrame(rows)
+
+
+# =========================================================
+# 11. Conclusion
+# =========================================================
+
+
+def create_eda_conclusion(
+    correlation_screen: pd.DataFrame,
+    nonlinearity: pd.DataFrame,
+    feature_engineering: pd.DataFrame,
+) -> str:
+    """Create a concise executive EDA summary."""
+
+    curved = nonlinearity.loc[
+        nonlinearity["exploratory_pattern"].isin(
+            ["Moderate curvature", "Strong nonlinear pattern"]
+        ),
+        "feature",
+    ].tolist()
+
+    automatic_count = int(
+        (
+            feature_engineering["recommendation_type"]
+            == "DETERMINISTIC RATIO"
+        ).sum()
+    )
+
+    interaction_count = int(
+        (
+            feature_engineering["recommendation_type"]
+            == "EXPLORATORY INTERACTION"
+        ).sum()
+    )
+
+    return f"""EXECUTIVE EDA SUMMARY
+======================================================================
+
+The exploratory analysis suggests that:
+
+✓ All schema-approved predictors should remain candidates at this stage.
+
+✓ Weak marginal correlation is not treated as evidence that a predictor
+  is unimportant. Joint, nonlinear, interaction, categorical, and spatial
+  contributions remain possible.
+
+✓ {len(correlation_screen)} highly associated predictor pair(s) require
+  VIF and condition-number assessment before inferential coefficient
+  interpretation.
+
+✓ The provisional LOWESS screen indicates material curvature for:
+  {", ".join(curved) if curved else "no predictors above the selected threshold"}.
+  These findings require visual and model-based confirmation.
+
+✓ {automatic_count} automatically generated ratio variable(s) have direct
+  business meaning, while {interaction_count} interaction hypothesis(es)
+  should be evaluated rather than imposed.
+
+✓ Potential extreme observations should generally be retained for machine
+  learning and examined through sensitivity analysis for inference.
+
+Recommended modelling direction:
+
+Machine Learning
+    Candidate variables → Feature generation → Training → Validation
+    → Tuning → Frozen model → Test → Operational use
+
+Inferential Analysis
+    Linear baseline → Multicollinearity assessment → RESET
+    → Diagnostics or alternative nonlinear specification
+    → Model comparison → Validation → Test
+    → Full-sample estimation → Interpretation
+
+EDA guides the next stage but does not determine the final model.
+======================================================================
+"""
+
+def html_table(
+    data: pd.DataFrame,
+    empty_message: str = "No items identified.",
+) -> str:
+    if data is None or data.empty:
+        return f'<p class="empty">{empty_message}</p>'
+
+    return data.to_html(
+        index=False,
+        border=0,
+        classes="data-table",
+        escape=True,
+    )
+
+
+def summary_cards(
+    data: pd.DataFrame,
+    correlation_screen: pd.DataFrame,
+    nonlinearity: pd.DataFrame,
+    feature_engineering: pd.DataFrame,
+) -> str:
+    curved_count = int(
+        nonlinearity["exploratory_pattern"].isin(
+            ["Moderate curvature", "Strong nonlinear pattern"]
+        ).sum()
+    )
+
+    cards = [
+        ("Training observations", f"{len(data):,}", "dataset"),
+        ("Candidate predictors", f"{len(data.columns) - 1}", "variables"),
+        ("High-correlation pairs", f"{len(correlation_screen)}", "correlation"),
+        ("Curved relationships", f"{curved_count}", "nonlinearity"),
+        ("Engineered features", f"{len(feature_engineering)}", "engineering"),
+    ]
+
+    return "".join(
+        f"""
+        <div class="summary-card {css_class}">
+            <div class="card-number">{value}</div>
+            <div class="card-label">{label}</div>
+        </div>
+        """
+        for label, value, css_class in cards
+    )
+
+
+
+def workflow_html() -> str:
+    """Return visual predictive and inferential decision paths."""
+
+    return """
+    <div class="workflow-grid">
+
+        <div class="workflow-card">
+            <h3>Machine Learning Branch</h3>
+            <div class="vertical-flow">
+                <div class="flow-node">Candidate Variables</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-node">Automatic Feature Generation</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-node">Training</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-node">Validation</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-node">Hyperparameter Tuning</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-node">Frozen Model</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-node">Untouched Test Set</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-node final-node">Operational Use</div>
+            </div>
+        </div>
+
+        <div class="workflow-card">
+            <h3>Inferential Branch</h3>
+            <div class="vertical-flow">
+                <div class="flow-node">Candidate Variables</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-node">Linear OLS Baseline</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-node">VIF + Condition Number</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-node decision-node">RESET Specification Test</div>
+
+                <div class="branch-line">
+                    <span></span>
+                    <span></span>
+                </div>
+
+                <div class="decision-grid">
+                    <div class="decision-column">
+                        <div class="decision-label pass">PASS</div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-node">OLS Diagnostics</div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-node">Robust Inference</div>
+                    </div>
+
+                    <div class="decision-column">
+                        <div class="decision-label reject">REJECT</div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-node">Polynomial OLS</div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-node">Model-Specific Diagnostics</div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-node">GAM if Still Inadequate</div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-node">GAM Diagnostics</div>
+                    </div>
+                </div>
+
+                <div class="merge-label">VALID MODEL CANDIDATES</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-node">Model-Family Comparison</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-node">Validation</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-node">Untouched Test Set</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-node">Full-Sample Estimation</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-node final-node">Interpretation</div>
+            </div>
+        </div>
+
+    </div>
+    """
+
+
+def create_html_report(
+    data: pd.DataFrame,
+    candidates: pd.DataFrame,
+    correlation_screen: pd.DataFrame,
+    nonlinearity: pd.DataFrame,
+    feature_engineering: pd.DataFrame,
+    business_interpretation: pd.DataFrame,
+    modelling_challenges: pd.DataFrame,
+    model_recommendations: pd.DataFrame,
+    conclusion: str,
+) -> str:
+    """Create a domain-neutral analytical notebook."""
+
+    automatic_features = feature_engineering.loc[
+        feature_engineering["recommendation_type"]
+        == "DETERMINISTIC RATIO"
+    ].copy()
+
+    interaction_hypotheses = feature_engineering.loc[
+        feature_engineering["recommendation_type"]
+        == "EXPLORATORY INTERACTION"
+    ].copy()
+
+    candidate_display = candidates[
+        [
+            "feature",
+            "semantic_type",
+            "business_rationale",
+            "expected_relationship",
+            "candidate_status",
+        ]
+    ].copy()
+
+    nonlinearity_display = nonlinearity[
+        [
+            "feature",
+            "lowess_deviation_score",
+            "visual_evidence",
+            "analyst_decision",
+            "provisional_model_implication",
+            "figure_file",
+        ]
+    ].copy()
+
+    figure_cards = []
+
+    for figure in sorted(FIGURES_DIR.glob("*.png")):
+        title = figure.stem.replace("_", " ").title()
+
+        figure_cards.append(
+            f"""
+            <figure class="figure-card">
+                <img src="figures/{figure.name}" alt="{title}">
+                <figcaption>{title}</figcaption>
+            </figure>
+            """
+        )
+
+    grouped_challenges = []
+
+    for group_name, group_data in modelling_challenges.groupby(
+        "challenge_group",
+        sort=False,
+    ):
+        grouped_challenges.append(
+            f"""
+            <details open>
+                <summary>{group_name}</summary>
+                <div class="table-wrap">
+                    {html_table(group_data.drop(columns=["challenge_group"]))}
+                </div>
+            </details>
+            """
+        )
+
+    css = """
+    :root {
+        --navy: #16324f;
+        --teal: #2b7a78;
+        --blue: #2d6a8a;
+        --gold: #c6922e;
+        --red: #a94d44;
+        --green: #4f772d;
+        --purple: #73558f;
+        --light: #f4f7f9;
+        --border: #d8e1e7;
+        --text: #1f2933;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+        margin: 0;
+        font-family: "Segoe UI", Arial, sans-serif;
+        background: #eaf0f4;
+        color: var(--text);
+        line-height: 1.55;
+    }
+
+    .layout {
+        display: grid;
+        grid-template-columns: 260px 1fr;
+        min-height: 100vh;
+    }
+
+    .sidebar {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        padding: 26px 18px;
+        background: var(--navy);
+        color: white;
+        overflow-y: auto;
+    }
+
+    .sidebar h2 {
+        margin: 0 0 18px;
+        font-size: 1.1rem;
+    }
+
+    .sidebar a {
+        display: block;
+        color: white;
+        text-decoration: none;
+        padding: 9px 10px;
+        border-radius: 8px;
+        margin-bottom: 4px;
+        font-size: .9rem;
+    }
+
+    .sidebar a:hover { background: rgba(255,255,255,.12); }
+
+    .main {
+        padding: 32px;
+        max-width: 1500px;
+        width: 100%;
+    }
+
+    .hero {
+        padding: 34px;
+        color: white;
+        border-radius: 18px;
+        background: linear-gradient(135deg,var(--navy),var(--teal));
+        box-shadow: 0 12px 28px rgba(0,0,0,.13);
+    }
+
+    .hero h1 {
+        margin: 0 0 8px;
+        font-size: 2.1rem;
+    }
+
+    .hero p {
+        max-width: 950px;
+        margin-bottom: 0;
+    }
+
+    .purpose-panel {
+        margin-top: 20px;
+        padding: 18px;
+        border-radius: 13px;
+        background: rgba(255,255,255,.12);
+    }
+
+    .purpose-panel h3 { margin-top: 0; }
+
+    .purpose-questions {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+    }
+
+    .purpose-question {
+        padding: 12px;
+        background: rgba(255,255,255,.12);
+        border-radius: 9px;
+        font-size: .88rem;
+        text-align: center;
+    }
+
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit,minmax(180px,1fr));
+        gap: 14px;
+        margin-top: 20px;
+    }
+
+    .summary-card {
+        border-radius: 12px;
+        padding: 17px;
+        color: white;
+    }
+
+    .summary-card.dataset { background: var(--navy); }
+    .summary-card.variables { background: var(--blue); }
+    .summary-card.correlation { background: var(--red); }
+    .summary-card.nonlinearity { background: var(--purple); }
+    .summary-card.engineering { background: var(--green); }
+
+    .card-number {
+        font-size: 1.7rem;
+        font-weight: 700;
+    }
+
+    .card-label {
+        font-size: .88rem;
+        opacity: .92;
+    }
+
+    .section {
+        margin-top: 24px;
+        padding: 25px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,.06);
+    }
+
+    .section h2 {
+        margin-top: 0;
+        color: var(--navy);
+        border-bottom: 3px solid var(--teal);
+        padding-bottom: 8px;
+    }
+
+    .section-intro {
+        color: #52616d;
+        margin-top: -4px;
+    }
+
+    .table-wrap { overflow-x: auto; }
+
+    table.data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: .84rem;
+    }
+
+    .data-table th {
+        background: var(--navy);
+        color: white;
+        text-align: left;
+        padding: 9px;
+        white-space: nowrap;
+    }
+
+    .data-table td {
+        padding: 9px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+    }
+
+    .data-table tr:nth-child(even) { background: #f8fafb; }
+
+    .two-column,
+    .workflow-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+
+    .feature-card,
+    .workflow-card,
+    .strategy-card {
+        border: 1px solid var(--border);
+        border-radius: 13px;
+        padding: 20px;
+        background: #fafcfd;
+    }
+
+    .feature-card h3,
+    .workflow-card h3,
+    .strategy-card h3 {
+        margin-top: 0;
+        color: var(--navy);
+        text-align: center;
+    }
+
+    details {
+        border: 1px solid var(--border);
+        border-radius: 11px;
+        margin-top: 12px;
+        overflow: hidden;
+    }
+
+    summary {
+        cursor: pointer;
+        font-weight: 700;
+        padding: 13px 15px;
+        background: #eef3f6;
+        color: var(--navy);
+    }
+
+    details .table-wrap { padding: 14px; }
+
+    .gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fit,minmax(360px,1fr));
+        gap: 18px;
+    }
+
+    .figure-card {
+        margin: 0;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        background: white;
+    }
+
+    .figure-card img {
+        width: 100%;
+        display: block;
+    }
+
+    .figure-card figcaption {
+        padding: 10px;
+        text-align: center;
+        font-weight: 700;
+    }
+
+    .vertical-flow { text-align: center; }
+
+    .flow-node {
+        display: inline-block;
+        min-width: 230px;
+        padding: 10px 14px;
+        border-radius: 9px;
+        background: #edf3f6;
+        border: 1px solid var(--border);
+        font-weight: 600;
+    }
+
+    .decision-node {
+        background: #fff4d9;
+        border-color: var(--gold);
+    }
+
+    .final-node {
+        background: var(--teal);
+        color: white;
+        border: 0;
+    }
+
+    .flow-arrow {
+        font-size: 1.35rem;
+        color: var(--teal);
+        line-height: 1.35;
+    }
+
+    .decision-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin: 12px 0;
+    }
+
+    .decision-column {
+        padding: 12px;
+        border: 1px dashed var(--border);
+        border-radius: 10px;
+    }
+
+    .decision-label {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 20px;
+        color: white;
+        font-size: .82rem;
+        font-weight: 700;
+    }
+
+    .decision-label.pass { background: var(--green); }
+    .decision-label.reject { background: var(--red); }
+
+    .branch-line {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        width: 75%;
+        height: 20px;
+        margin: 0 auto;
+    }
+
+    .branch-line span:first-child {
+        border-top: 2px solid var(--teal);
+        border-right: 1px solid var(--teal);
+    }
+
+    .branch-line span:last-child {
+        border-top: 2px solid var(--teal);
+        border-left: 1px solid var(--teal);
+    }
+
+    .merge-label {
+        display: inline-block;
+        margin-top: 8px;
+        padding: 6px 10px;
+        border-radius: 20px;
+        background: #e8eef2;
+        color: var(--navy);
+        font-size: .78rem;
+        font-weight: 700;
+    }
+
+    .selection-flow {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 15px;
+    }
+
+    .selection-step {
+        padding: 10px 13px;
+        border-radius: 9px;
+        background: #edf3f6;
+        border: 1px solid var(--border);
+        font-weight: 600;
+    }
+
+    .selection-arrow {
+        color: var(--teal);
+        font-size: 1.2rem;
+    }
+
+    .conclusion {
+        white-space: pre-wrap;
+        background: #f8fafb;
+        border-left: 5px solid var(--teal);
+        padding: 18px;
+        border-radius: 9px;
+    }
+
+    .note {
+        background: #fff7db;
+        border-left: 5px solid var(--gold);
+        padding: 15px;
+        border-radius: 9px;
+    }
+
+    .empty {
+        color: #74828d;
+        font-style: italic;
+    }
+
+    @media (max-width: 1150px) {
+        .purpose-questions { grid-template-columns: 1fr; }
+        .layout { grid-template-columns: 1fr; }
+        .sidebar {
+            position: static;
+            height: auto;
+        }
+        .two-column,
+        .workflow-grid { grid-template-columns: 1fr; }
+    }
+
+    @media print {
+        .sidebar { display: none; }
+        .layout { display: block; }
+        body { background: white; }
+        .main { padding: 0; }
+        .section,
+        .hero { box-shadow: none; }
+    }
+    """
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EDA Analytical Notebook</title>
+<style>{css}</style>
+</head>
+<body>
+
+<div class="layout">
+
+<nav class="sidebar">
+<h2>EDA Analytical Notebook</h2>
+<a href="#overview">Overview</a>
+<a href="#variables">Candidate Variables</a>
+<a href="#correlation">Multicollinearity Screen</a>
+<a href="#nonlinearity">LOWESS Review</a>
+<a href="#engineering">Feature Engineering</a>
+<a href="#business">Business Interpretation</a>
+<a href="#selection">Variable Selection Strategy</a>
+<a href="#challenges">Modelling Challenges</a>
+<a href="#workflow">Recommended Workflow</a>
+<a href="#figures">LOWESS Figures</a>
+<a href="#conclusion">Executive Summary</a>
+</nav>
+
+<main class="main">
+
+<section class="hero" id="overview">
+<h1>EDA Analytical Notebook</h1>
+<p>
+This domain-neutral notebook converts exploratory findings into candidate
+variable guidance, relationship assessment, business interpretation,
+feature ideas, modelling challenges, and the recommended analytical path.
+</p>
+
+<div class="purpose-panel">
+<h3>Purpose of EDA</h3>
+<div class="purpose-questions">
+<div class="purpose-question">1. What does the data look like?</div>
+<div class="purpose-question">2. Which variables remain candidates?</div>
+<div class="purpose-question">3. What relationships and patterns exist?</div>
+<div class="purpose-question">4. What challenges may affect modelling?</div>
+<div class="purpose-question">5. How should modelling proceed?</div>
+</div>
+</div>
+
+<div class="summary-grid">
+{summary_cards(
+    data,
+    correlation_screen,
+    nonlinearity,
+    feature_engineering,
+)}
+</div>
+</section>
+
+<section class="section" id="variables">
+<h2>🟢 Candidate Explanatory Variables</h2>
+<p class="section-intro">
+This first table answers why each variable should be considered. Correlation
+and LOWESS evidence are reported in later sections rather than being used as
+the organising principle for candidate selection.
+</p>
+<div class="table-wrap">
+{html_table(candidate_display)}
+</div>
+</section>
+
+<section class="section" id="correlation">
+<h2>🔵 Multicollinearity Screening</h2>
+<p class="section-intro">
+High pairwise association signals possible redundancy for inferential
+coefficient estimation. It is not an automatic removal rule and may be
+acceptable in predictive models when validation performance benefits.
+</p>
+<div class="table-wrap">
+{html_table(
+    correlation_screen,
+    "No predictor pairs exceeded the selected threshold.",
+)}
+</div>
+</section>
+
+<section class="section" id="nonlinearity">
+<h2>🟣 LOWESS Deviation and Analyst Review</h2>
+<p class="section-intro">
+The score ranks deviation from a linear approximation. The automated screen
+is not the final classification: review the figure, record the visual evidence,
+and confirm the decision through specification tests and validation.
+</p>
+<div class="table-wrap">
+{html_table(nonlinearity_display)}
+</div>
+</section>
+
+<section class="section" id="engineering">
+<h2>🔵 Feature Engineering</h2>
+
+<div class="two-column">
+
+<div class="feature-card">
+<h3>Automatically Generated Variables</h3>
+<p>
+These ratios have direct business meaning and may be generated consistently
+across training, validation, test, and future data.
+</p>
+<div class="table-wrap">
+{html_table(automatic_features)}
+</div>
+</div>
+
+<div class="feature-card">
+<h3>Exploratory Interaction Hypotheses</h3>
+<p>
+These are hypotheses rather than mandatory transformations. Retain them only
+when they have conceptual justification and add validated value.
+</p>
+<div class="table-wrap">
+{html_table(interaction_hypotheses)}
+</div>
+</div>
+
+</div>
+</section>
+
+<section class="section" id="business">
+<h2>🟠 Business Interpretation</h2>
+<p class="section-intro">
+Each interpretation follows the same sequence: observed pattern, possible
+explanation, business implication, and inferential caution.
+</p>
+<div class="table-wrap">
+{html_table(business_interpretation)}
+</div>
+</section>
+
+<section class="section" id="selection">
+<h2>Variable Selection Strategy</h2>
+<p class="section-intro">
+EDA does not remove variables. Final selection occurs only after feature
+generation and model-specific evaluation.
+</p>
+
+<div class="strategy-card">
+<h3>Selection Logic</h3>
+<div class="selection-flow">
+<div class="selection-step">Schema-Approved Variables</div>
+<div class="selection-arrow">→</div>
+<div class="selection-step">EDA Candidate Set</div>
+<div class="selection-arrow">→</div>
+<div class="selection-step">Feature Generation</div>
+<div class="selection-arrow">→</div>
+<div class="selection-step">Model-Based Assessment</div>
+<div class="selection-arrow">→</div>
+<div class="selection-step">Validation</div>
+<div class="selection-arrow">→</div>
+<div class="selection-step">Final Model</div>
+</div>
+</div>
+</section>
+
+<section class="section" id="challenges">
+<h2>🟣 Potential Modelling Challenges</h2>
+<p class="section-intro">
+Challenges are grouped into data, statistical, and business or structural
+issues to make their implications and required actions clear.
+</p>
+{''.join(grouped_challenges)}
+</section>
+
+<section class="section" id="workflow">
+<h2>🔴 Recommended Analytical Workflow</h2>
+<p class="section-intro">
+The predictive and inferential branches use different quality criteria and
+therefore proceed through distinct but complementary paths.
+</p>
+
+{workflow_html()}
+
+<div class="table-wrap" style="margin-top:20px">
+{html_table(model_recommendations)}
+</div>
+</section>
+
+<section class="section" id="figures">
+<h2>LOWESS Figures</h2>
+<p class="section-intro">
+Use these plots to record visual evidence before accepting the automated
+screen. A LOWESS curve is exploratory evidence, not a formal specification
+test.
+</p>
+<div class="gallery">
+{''.join(figure_cards)}
+</div>
+</section>
+
+<section class="section" id="conclusion">
+<h2>Executive Summary</h2>
+<div class="conclusion">{conclusion}</div>
+</section>
+
+<section class="section">
+<h2>Methodological Caution</h2>
+<div class="note">
+EDA guides model development but does not establish causality, statistical
+significance, coefficient estimability, or out-of-sample performance.
+</div>
+</section>
+
+</main>
+</div>
+
+</body>
+</html>
+"""
+
+def dataframe_markdown(data: pd.DataFrame) -> str:
+    if data.empty:
+        return "_No items identified._"
+
+    columns = list(data.columns)
+
+    lines = [
+        "| " + " | ".join(columns) + " |",
+        "| " + " | ".join(["---"] * len(columns)) + " |",
+    ]
+
+    for _, row in data.iterrows():
+        values = []
+
+        for column in columns:
+            value = row[column]
+
+            if pd.isna(value):
+                text = ""
+            elif isinstance(value, float):
+                text = f"{value:.4f}"
+            else:
+                text = str(value)
+
+            values.append(text.replace("|", "/"))
+
+        lines.append("| " + " | ".join(values) + " |")
+
+    return "\n".join(lines)
+
+
+
+def create_markdown_report(
+    candidates: pd.DataFrame,
+    correlation_screen: pd.DataFrame,
+    nonlinearity: pd.DataFrame,
+    feature_engineering: pd.DataFrame,
+    business_interpretation: pd.DataFrame,
+    modelling_challenges: pd.DataFrame,
+    model_recommendations: pd.DataFrame,
+    conclusion: str,
+) -> str:
+    """Create a domain-neutral Markdown notebook."""
+
+    automatic_features = feature_engineering.loc[
+        feature_engineering["recommendation_type"]
+        == "DETERMINISTIC RATIO"
+    ]
+
+    interactions = feature_engineering.loc[
+        feature_engineering["recommendation_type"]
+        == "EXPLORATORY INTERACTION"
+    ]
+
+    candidate_display = candidates[
+        [
+            "feature",
+            "semantic_type",
+            "business_rationale",
+            "expected_relationship",
+            "candidate_status",
+        ]
+    ]
+
+    lowess_display = nonlinearity[
+        [
+            "feature",
+            "lowess_deviation_score",
+            "visual_evidence",
+            "analyst_decision",
+            "provisional_model_implication",
+            "figure_file",
+        ]
+    ]
+
+    return f"""# EDA Analytical Notebook
+
+## Purpose of EDA
+
+EDA answers five questions:
+
+1. What does the data look like?
+2. Which variables remain candidates?
+3. What relationships and patterns exist?
+4. What challenges may affect modelling?
+5. How should modelling proceed?
+
+## 1. Candidate Explanatory Variables
+
+{dataframe_markdown(candidate_display)}
+
+## 2. Multicollinearity Screening
+
+{dataframe_markdown(correlation_screen)}
+
+## 3. LOWESS Deviation and Analyst Review
+
+{dataframe_markdown(lowess_display)}
+
+The automated LOWESS screen is provisional. Visual review, RESET,
+diagnostics, validation, and test evidence are required.
+
+## 4. Automatically Generated Variables
+
+{dataframe_markdown(automatic_features)}
+
+## 5. Exploratory Interaction Hypotheses
+
+{dataframe_markdown(interactions)}
+
+## 6. Business Interpretation
+
+{dataframe_markdown(business_interpretation)}
+
+## 7. Variable Selection Strategy
+
+Schema-approved variables → EDA candidate set → Feature generation →
+Model-based assessment → Validation → Final model.
+
+## 8. Potential Modelling Challenges
+
+{dataframe_markdown(modelling_challenges)}
+
+## 9. Model-Development Recommendations
+
+{dataframe_markdown(model_recommendations)}
+
+## 10. Executive Summary
+
+```text
+{conclusion}
+```
+
+## Methodological Caution
+
+EDA guides model development but does not establish causality, statistical
+significance, coefficient estimability, or out-of-sample performance.
+"""
+
+def main() -> None:
+    require_training_data()
+
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    FIGURES_DIR.mkdir(parents=True, exist_ok=True)
+
+    data = pd.read_csv(TRAIN_PATH)
+
+    target_correlations = read_optional_csv(
+        "target_correlations.csv"
+    )
+
+    if target_correlations is None:
+        target_correlations = calculate_target_correlations(data)
+
+    correlation_matrix = calculate_correlation_matrix(data)
+
+    correlation_screen = create_predictor_correlation_screen(
+        correlation_matrix
+    )
+
+    nonlinearity = create_nonlinearity_screen(data)
+
+    outliers = read_optional_csv("outlier_summary.csv")
+
+    if outliers is None:
+        outliers = calculate_outlier_summary(data)
+
+    distributions = read_optional_csv(
+        "numerical_distribution_summary.csv"
+    )
+
+    if distributions is None:
+        distributions = calculate_distribution_summary(data)
+
+    categorical_summary = read_optional_csv(
+        "categorical_target_summary.csv"
+    )
+
+    candidates = create_candidate_explanatory_variables(
+        data,
+        target_correlations,
+        nonlinearity,
+        outliers,
+    )
+
+    feature_engineering = (
+        create_feature_engineering_recommendations(data)
+    )
+
+    business_interpretation = create_business_interpretation(
+        target_correlations,
+        categorical_summary,
+    )
+
+    modelling_challenges = create_modelling_challenges(
+        data,
+        distributions,
+        correlation_screen,
+        nonlinearity,
+        outliers,
+    )
+
+    model_recommendations = (
+        create_model_development_recommendations(
+            correlation_screen,
+            nonlinearity,
+        )
+    )
+
+    conclusion = create_eda_conclusion(
+        correlation_screen,
+        nonlinearity,
+        feature_engineering,
+    )
+
+    candidates.to_csv(
+        CANDIDATE_VARIABLES_PATH,
+        index=False,
+        encoding="utf-8",
+    )
+
+    correlation_screen.to_csv(
+        CORRELATION_SCREEN_PATH,
+        index=False,
+        encoding="utf-8",
+    )
+
+    nonlinearity.to_csv(
+        NONLINEARITY_SCREEN_PATH,
+        index=False,
+        encoding="utf-8",
+    )
+
+    feature_engineering.to_csv(
+        FEATURE_ENGINEERING_PATH,
+        index=False,
+        encoding="utf-8",
+    )
+
+    modelling_challenges.to_csv(
+        MODELLING_CHALLENGES_PATH,
+        index=False,
+        encoding="utf-8",
+    )
+
+    business_interpretation.to_csv(
+        BUSINESS_INTERPRETATION_PATH,
+        index=False,
+        encoding="utf-8",
+    )
+
+    model_recommendations.to_csv(
+        MODEL_RECOMMENDATIONS_PATH,
+        index=False,
+        encoding="utf-8",
+    )
+
+    CONCLUSION_PATH.write_text(
+        conclusion,
+        encoding="utf-8",
+    )
+
+    MARKDOWN_PATH.write_text(
+        create_markdown_report(
+            candidates,
+            correlation_screen,
+            nonlinearity,
+            feature_engineering,
+            business_interpretation,
+            modelling_challenges,
+            model_recommendations,
+            conclusion,
+        ),
+        encoding="utf-8",
+    )
+
+    HTML_PATH.write_text(
+        create_html_report(
+            data,
+            candidates,
+            correlation_screen,
+            nonlinearity,
+            feature_engineering,
+            business_interpretation,
+            modelling_challenges,
+            model_recommendations,
+            conclusion,
+        ),
+        encoding="utf-8",
+    )
+
+    print("=" * 100)
+    print("EDA ANALYTICAL NOTEBOOK")
+    print("=" * 100)
+
+    print("\nCandidate explanatory variables:")
+    print(
+        candidates[
+            [
+                "feature",
+                "semantic_type",
+                "candidate_status",
+            ]
+        ].to_string(index=False)
+    )
+
+    print("\nModelling challenges:")
+    print(
+        modelling_challenges.to_string(index=False)
+    )
+
+    print("\nOutputs saved to:")
+    print(OUTPUT_DIR)
+
+    print("\nOpen the HTML notebook with:")
+    print(
+        "start results\\eda_analysis_summary\\"
+        "analytical_summary.html"
+    )
+
+    print("=" * 100)
+
+
+if __name__ == "__main__":
+    main()

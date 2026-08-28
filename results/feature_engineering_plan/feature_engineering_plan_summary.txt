@@ -1,0 +1,33 @@
+FEATURE ENGINEERING PLAN SUMMARY
+======================================================================
+
+Training observations:
+14448
+
+Target variable:
+median_house_value
+
+Total proposed feature assets:
+27
+
+Feature groups:
+feature_group
+Deterministic        6
+Domain               3
+Statistical         11
+Machine Learning     4
+Inferential          3
+
+Automatically approved or implementation-ready:
+8
+
+Proposals requiring evaluation or approval:
+-9
+
+Outputs:
+C:\Users\varsh\OneDrive\Attachments\Desktop\ML_Pipelineproject\results\feature_engineering_plan
+
+Important:
+This stage creates a plan and feature repository only.
+It does not transform the training, validation, or test datasets.
+======================================================================

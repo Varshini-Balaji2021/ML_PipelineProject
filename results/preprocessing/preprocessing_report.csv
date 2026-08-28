@@ -1,0 +1,16 @@
+operation,column,affected_observations,decision,description
+semantic_validation_gate,,0,PASSED WITH WARNINGS,Preprocessing proceeded only after semantic-schema validation.
+schema_column_selection,,0,SCHEMA COLUMNS RETAINED,Unexpected columns excluded: none
+dtype_alignment,longitude,0,float64,Storage type aligned with semantic_schema.py.
+dtype_alignment,latitude,0,float64,Storage type aligned with semantic_schema.py.
+dtype_alignment,housing_median_age,0,Int64,Storage type aligned with semantic_schema.py.
+dtype_alignment,total_rooms,0,Int64,Storage type aligned with semantic_schema.py.
+dtype_alignment,total_bedrooms,0,Int64,Storage type aligned with semantic_schema.py.
+dtype_alignment,population,0,Int64,Storage type aligned with semantic_schema.py.
+dtype_alignment,households,0,Int64,Storage type aligned with semantic_schema.py.
+dtype_alignment,median_income,0,float64,Storage type aligned with semantic_schema.py.
+dtype_alignment,median_house_value,0,float64,Storage type aligned with semantic_schema.py.
+dtype_alignment,ocean_proximity,0,string,Storage type aligned with semantic_schema.py.
+categorical_text_standardisation,ocean_proximity,0,WHITESPACE TRIMMED,Leading and trailing whitespace removed from non-missing category values.
+missing_value_treatment,,207,PRESERVED,Allowed missing values were retained. Model-specific imputation must be fitted using training data only.
+row_count_check,,0,NO ROWS REMOVED,Raw rows=20640; processed rows=20640.

@@ -1,0 +1,2 @@
+column_name,missing_count,missing_percentage,nullable_in_schema,documented_treatment
+total_bedrooms,140,0.9689922480620154,True,median_imputation_after_split

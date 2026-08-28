@@ -1,0 +1,47 @@
+SCHEMA-DRIVEN PREPROCESSING SUMMARY
+================================================================================
+
+Raw input:
+C:\Users\varsh\OneDrive\Attachments\Desktop\ML_Pipelineproject\data\raw\housing.csv
+
+Validation summary:
+C:\Users\varsh\OneDrive\Attachments\Desktop\ML_Pipelineproject\results\data_validation\validation_summary.csv
+
+Validation status:
+PASSED WITH WARNINGS
+
+Schema source:
+C:\Users\varsh\OneDrive\Attachments\Desktop\ML_Pipelineproject\src\semantic_schema.py
+
+Raw dataset:
+  Rows: 20640
+  Columns: 10
+
+Processed dataset:
+  Rows: 20640
+  Columns: 10
+
+Target column:
+median_house_value
+
+Numerical predictor columns:
+['longitude', 'latitude', 'housing_median_age', 'total_rooms', 'total_bedrooms', 'population', 'households', 'median_income']
+
+Categorical predictor columns:
+['ocean_proximity']
+
+Unexpected raw columns excluded:
+None
+
+Missing values preserved:
+  total_bedrooms: 207
+
+Output:
+C:\Users\varsh\OneDrive\Attachments\Desktop\ML_Pipelineproject\data\processed\housing_clean.csv
+
+No rows were removed.
+No missing values were imputed.
+No variables were scaled.
+No categorical variables were encoded.
+No outliers were removed or winsorized.
+================================================================================

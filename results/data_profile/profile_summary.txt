@@ -1,0 +1,7 @@
+STRUCTURAL DATA PROFILE
+Input: C:\Users\varsh\OneDrive\Attachments\Desktop\ML_Pipelineproject\data\raw\housing.csv
+Rows: 20640
+Columns: 10
+Missing values: 207
+Duplicate rows: 0
+No semantic assumptions were applied.

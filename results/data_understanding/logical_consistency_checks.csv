@@ -1,0 +1,19 @@
+check_name,affected_observations,status,description
+households_above_population,3,REVIEW,Household count should not normally exceed population.
+bedrooms_above_rooms,0,PASS,Bedrooms should not normally exceed total rooms.
+longitude_below_minimum,0,PASS,Values below schema minimum -180.0.
+longitude_above_maximum,0,PASS,Values above schema maximum 180.0.
+latitude_below_minimum,0,PASS,Values below schema minimum -90.0.
+latitude_above_maximum,0,PASS,Values above schema maximum 90.0.
+housing_median_age_below_minimum,0,PASS,Values below schema minimum 0.0.
+housing_median_age_non_whole_values,0,PASS,Checks the whole-number requirement.
+total_rooms_below_minimum,0,PASS,Values below schema minimum 0.0.
+total_rooms_non_whole_values,0,PASS,Checks the whole-number requirement.
+total_bedrooms_below_minimum,0,PASS,Values below schema minimum 0.0.
+total_bedrooms_non_whole_values,0,PASS,Checks the whole-number requirement.
+population_below_minimum,0,PASS,Values below schema minimum 0.0.
+population_non_whole_values,0,PASS,Checks the whole-number requirement.
+households_below_minimum,0,PASS,Values below schema minimum 0.0.
+households_non_whole_values,0,PASS,Checks the whole-number requirement.
+median_income_below_minimum,0,PASS,Values below schema minimum 0.0.
+median_house_value_below_minimum,0,PASS,Values below schema minimum 0.0.

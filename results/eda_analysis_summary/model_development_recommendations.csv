@@ -1,0 +1,8 @@
+sequence,analytical_branch,stage,recommendation,reason
+1,Both,Candidate explanatory variables,Begin with all schema-approved predictors.,EDA is a screening stage. Weak marginal correlation does not justify exclusion.
+2,Both,Feature engineering,Create deterministic ratios and evaluate selected interaction hypotheses.,Ratios may separate block size from housing density and occupancy conditions.
+3,Machine Learning,Training and validation,"Retain the complete engineered feature set initially; train, tune, validate, freeze, and test.","Predictive contribution may arise through joint, nonlinear, and interaction effects."
+4,Inferential,Linear baseline,Estimate Linear OLS and assess VIF and condition number.,7 high-correlation predictor pair(s) were identified.
+5,Inferential,Specification decision,"Apply RESET. If the linear model passes, proceed to diagnostics and robust inference.",A valid linear model should be retained when specification and diagnostics are acceptable.
+6,Inferential,Alternative specification,"If Linear OLS fails, evaluate nonlinear polynomial OLS and then GAM.","Exploratory curvature appears in: longitude, latitude, total_rooms, total_bedrooms, households, housing_median_age, population, median_income."
+7,Inferential,Model-family evaluation,"Diagnose each valid family, compare models, validate, test, and then estimate the selected model on the full sample.","Model choice should reflect specification adequacy, diagnostics, interpretability, and out-of-sample evidence."

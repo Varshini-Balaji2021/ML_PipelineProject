@@ -1,0 +1,5 @@
+Project: California Housing Regression Pipeline
+- Objective: Predict house values efficiently using machine learning.
+- Best Model: Random Forest (Val R2: 0.8160, RMSE: 49141.07)
+- Pipeline Stages Completed: Ingestion, EDA, Preprocessing, Training, Evaluation, and Automated HTML Reporting.
+- Final Deliverables: Saved best model (.joblib) and test prediction submission (.csv).

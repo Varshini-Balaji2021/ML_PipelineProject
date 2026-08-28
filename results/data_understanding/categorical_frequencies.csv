@@ -1,0 +1,6 @@
+column_name,category_level,frequency,percentage
+ocean_proximity,<1H OCEAN,6381,44.165282392026576
+ocean_proximity,INLAND,4578,31.686046511627907
+ocean_proximity,NEAR OCEAN,1829,12.659191583610188
+ocean_proximity,NEAR BAY,1658,11.475636766334441
+ocean_proximity,ISLAND,2,0.013842746400885935

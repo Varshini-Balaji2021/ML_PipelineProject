@@ -1,0 +1,158 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <title>EDA Analytical Summary</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 40px; background-color: #f9f9f9; color: #333; }
+            h1 { color: #1f4e79; }
+            h2 { color: #2e75b6; border-bottom: 2px solid #ddd; padding-bottom: 5px; margin-top: 30px; }
+            table { border-collapse: collapse; width: 100%; margin: 15px 0; background: #fff; }
+            th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+            th { background-color: #f2f2f2; }
+            .container { background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.05); }
+            .footer { margin-top: 40px; font-size: 12px; color: #666; text-align: center; }
+        </style>
+    </head>
+    <body>
+    <div class="container">
+        <h1>EDA Analytical Summary</h1>
+        <p><strong>Generated:</strong> 2026-08-28 12:02</p>
+    <h2>Overview</h2>
+<p>This report summarizes the candidate explanatory variables from your exploratory data analysis stage.</p>
+<h2>Candidate Explanatory Variables</h2>
+<table border="1" class="dataframe table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>feature</th>
+      <th>semantic_type</th>
+      <th>business_rationale</th>
+      <th>expected_relationship</th>
+      <th>correlation_with_target</th>
+      <th>observed_linear_association</th>
+      <th>exploratory_nonlinearity</th>
+      <th>potential_outlier_percentage</th>
+      <th>candidate_status</th>
+      <th>final_decision_rule</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>longitude</td>
+      <td>spatial_coordinate</td>
+      <td>Geographic position may capture regional market structure and nonlinear spatial effects.</td>
+      <td>Expected regional and nonlinear spatial variation.</td>
+      <td>-0.052345</td>
+      <td>Very weak marginal linear association</td>
+      <td>Strong nonlinear pattern</td>
+      <td>0.000000</td>
+      <td>RETAIN AS CANDIDATE</td>
+      <td>Use validation for ML; use theory, VIF/estimability, specification, diagnostics, robust inference, and test evidence for inference.</td>
+    </tr>
+    <tr>
+      <td>latitude</td>
+      <td>spatial_coordinate</td>
+      <td>Geographic position may capture regional market structure and nonlinear spatial effects.</td>
+      <td>Expected regional and nonlinear spatial variation.</td>
+      <td>-0.137864</td>
+      <td>Weak marginal linear association</td>
+      <td>Strong nonlinear pattern</td>
+      <td>0.989756</td>
+      <td>RETAIN AS CANDIDATE</td>
+      <td>Use validation for ML; use theory, VIF/estimability, specification, diagnostics, robust inference, and test evidence for inference.</td>
+    </tr>
+    <tr>
+      <td>housing_median_age</td>
+      <td>discrete_numeric</td>
+      <td>The variable may have a nonlinear or piecewise relationship with house value.</td>
+      <td>Possible nonlinear or threshold effect.</td>
+      <td>0.116305</td>
+      <td>Weak marginal linear association</td>
+      <td>Moderate curvature</td>
+      <td>0.000000</td>
+      <td>RETAIN AS CANDIDATE</td>
+      <td>Use validation for ML; use theory, VIF/estimability, specification, diagnostics, robust inference, and test evidence for inference.</td>
+    </tr>
+    <tr>
+      <td>total_rooms</td>
+      <td>count</td>
+      <td>The variable may contribute through scale, density, ratio, or interaction effects.</td>
+      <td>Ambiguous raw-scale effect; ratios may be more informative.</td>
+      <td>0.136801</td>
+      <td>Weak marginal linear association</td>
+      <td>Moderate curvature</td>
+      <td>6.298450</td>
+      <td>RETAIN AS CANDIDATE</td>
+      <td>Use validation for ML; use theory, VIF/estimability, specification, diagnostics, robust inference, and test evidence for inference.</td>
+    </tr>
+    <tr>
+      <td>total_bedrooms</td>
+      <td>count</td>
+      <td>The variable may contribute through scale, density, ratio, or interaction effects.</td>
+      <td>Ambiguous raw-scale effect; ratios may be more informative.</td>
+      <td>0.049523</td>
+      <td>Very weak marginal linear association</td>
+      <td>Moderate curvature</td>
+      <td>6.263843</td>
+      <td>RETAIN AS CANDIDATE</td>
+      <td>Use validation for ML; use theory, VIF/estimability, specification, diagnostics, robust inference, and test evidence for inference.</td>
+    </tr>
+    <tr>
+      <td>population</td>
+      <td>count</td>
+      <td>The variable may contribute through scale, density, ratio, or interaction effects.</td>
+      <td>Possible density and congestion effect.</td>
+      <td>-0.024592</td>
+      <td>Very weak marginal linear association</td>
+      <td>Moderate curvature</td>
+      <td>5.966224</td>
+      <td>RETAIN AS CANDIDATE</td>
+      <td>Use validation for ML; use theory, VIF/estimability, specification, diagnostics, robust inference, and test evidence for inference.</td>
+    </tr>
+    <tr>
+      <td>households</td>
+      <td>count</td>
+      <td>The variable may contribute through scale, density, ratio, or interaction effects.</td>
+      <td>Possible block-size and occupancy effect.</td>
+      <td>0.066788</td>
+      <td>Very weak marginal linear association</td>
+      <td>Moderate curvature</td>
+      <td>6.049280</td>
+      <td>RETAIN AS CANDIDATE</td>
+      <td>Use validation for ML; use theory, VIF/estimability, specification, diagnostics, robust inference, and test evidence for inference.</td>
+    </tr>
+    <tr>
+      <td>median_income</td>
+      <td>continuous_numeric</td>
+      <td>The variable remains conceptually relevant and should be assessed jointly with other predictors.</td>
+      <td>Expected positive association with house value.</td>
+      <td>0.687873</td>
+      <td>Strong marginal linear association</td>
+      <td>Moderate curvature</td>
+      <td>3.377630</td>
+      <td>RETAIN AS CANDIDATE</td>
+      <td>Use validation for ML; use theory, VIF/estimability, specification, diagnostics, robust inference, and test evidence for inference.</td>
+    </tr>
+    <tr>
+      <td>ocean_proximity</td>
+      <td>nominal_categorical</td>
+      <td>Systematic differences between categories may explain house-price variation.</td>
+      <td>Expected systematic differences across categories.</td>
+      <td>NaN</td>
+      <td>Categorical predictor</td>
+      <td>Not applicable</td>
+      <td>0.000000</td>
+      <td>RETAIN AS CANDIDATE</td>
+      <td>Use validation for ML; use theory, VIF/estimability, specification, diagnostics, robust inference, and test evidence for inference.</td>
+    </tr>
+  </tbody>
+</table>
+
+        <div class="footer">
+            AI-Assisted ML Project Platform | Governance & Reporting Layer
+        </div>
+    </div>
+    </body>
+    </html>
+    
