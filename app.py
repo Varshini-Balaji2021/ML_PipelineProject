@@ -7,9 +7,11 @@ import streamlit as st
 PROJECT_ROOT = Path(__file__).resolve().parent
 RESULTS_DIR = PROJECT_ROOT / "results"
 EDA_SUMMARY_DIR = RESULTS_DIR / "eda_analysis_summary"
+EDA_FIGURES_DIR = RESULTS_DIR / "eda" / "figures"
 SPLITS_DIR = PROJECT_ROOT / "data" / "splits"
 PROCESSED_DIR = PROJECT_ROOT / "data" / "processed"
 REPORTS_DIR = PROJECT_ROOT / "reports"
+RAW_DATA_PATH = PROJECT_ROOT / "data" / "raw" / "housing.csv"
 
 st.set_page_config(page_title="ML Workbench Platform", layout="wide")
 st.title("🛠️ AI-Assisted ML Project Platform")
@@ -30,19 +32,20 @@ step = st.sidebar.radio(
 
 if step == "1. Project Dashboard":
     st.header("Project Overview & Status")
-    st.info("California Housing Dataset - Regression Pipeline")
+    st.info("House Prices Prediction Pipeline - Regression Workbench")
 
     col1, col2, col3 = st.columns(3)
-    train_exists = (SPLITS_DIR / "train.csv").exists()
-    col1.metric("Data Splits", "Available" if train_exists else "Missing")
+    train_exists = (SPLITS_DIR / "train.csv").exists() or RAW_DATA_PATH.exists()
+    col1.metric("Data Splits / Raw", "Available" if train_exists else "Missing")
     col2.metric("EDA Status", "Completed" if EDA_SUMMARY_DIR.exists() else "Pending")
 
     processed_exists = (PROCESSED_DIR / "train.npz").exists() or (PROCESSED_DIR / "train.csv").exists()
     col3.metric("Preprocessing Status", "Completed" if processed_exists else "Pending")
 
 elif step == "2. Data Understanding & Profiling":
-    st.header("Exploratory Data Analysis & Schema Validation")
+    st.header("Exploratory Data Analysis & Visual Figures")
 
+    # 1. Display Candidate Variables Table if available
     cand_path = EDA_SUMMARY_DIR / "candidate_explanatory_variables.csv"
     if cand_path.exists():
         st.subheader("Candidate Explanatory Variables")
@@ -51,6 +54,30 @@ elif step == "2. Data Understanding & Profiling":
     else:
         st.warning("Candidate variables file not found.")
 
+    # 2. Display Pre-generated Figures from results/eda/figures/
+    st.subheader("📊 EDA Visualizations & Figures")
+    if EDA_FIGURES_DIR.exists():
+        fig_files = sorted(list(EDA_FIGURES_DIR.glob("*.png")) + list(EDA_FIGURES_DIR.glob("*.jpg")))
+        
+        if fig_files:
+            # Display images in a clean 2-column grid format (fixed with use_container_width)
+            for i in range(0, len(fig_files), 2):
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    img_path1 = fig_files[i]
+                    st.image(str(img_path1), caption=img_path1.stem.replace('_', ' ').title(), use_container_width=True)
+                
+                if i + 1 < len(fig_files):
+                    with col2:
+                        img_path2 = fig_files[i + 1]
+                        st.image(str(img_path2), caption=img_path2.stem.replace('_', ' ').title(), use_container_width=True)
+        else:
+            st.info("No figure image files found in results/eda/figures/")
+    else:
+        st.warning(f"Figures directory not found at {EDA_FIGURES_DIR}")
+
+    # 3. Load HTML Analytical Summary Report if available
     html_path = EDA_SUMMARY_DIR / "analytical_summary.html"
     if html_path.exists():
         st.subheader("Interactive Analytical Summary Report")
@@ -82,9 +109,9 @@ elif step == "4. Preprocessing & Modeling":
         st.subheader("1. Run Preprocessing")
         if st.button("Execute Preprocessing Script"):
             with st.spinner("Running preprocessing..."):
-                script_path = PROJECT_ROOT / "src" / "preprocessing.py"
+                script_path = PROJECT_ROOT / "src" / "preprocessing" / "preprocess.py"
                 if not script_path.exists():
-                    script_path = PROJECT_ROOT / "src" / "preprocessing" / "preprocess.py"
+                    script_path = PROJECT_ROOT / "preprocess.py"
 
                 res = subprocess.run(["python", str(script_path)], capture_output=True, text=True)
                 if res.returncode == 0:
@@ -99,6 +126,9 @@ elif step == "4. Preprocessing & Modeling":
         if st.button("Execute Model Training Script"):
             with st.spinner("Training models..."):
                 train_script = PROJECT_ROOT / "src" / "modeling" / "train.py"
+                if not train_script.exists():
+                    train_script = PROJECT_ROOT / "train.py"
+                    
                 res = subprocess.run(["python", str(train_script)], capture_output=True, text=True)
                 if res.returncode == 0:
                     st.success("Training completed successfully!")
@@ -155,25 +185,26 @@ elif step == "6. Reports & Export":
             st.info("No reports found in the reports folder yet.")
     else:
         st.warning("Reports directory does not exist.")
+
 elif step == "7. Final Presentation":
     st.header("📢 Project Final Presentation Summary")
     st.markdown("Here are the key project highlights and slide notes ready for your presentation review.")
     
     st.subheader("1. Project Overview & Objective")
-    st.write("- **Dataset:** California Housing Dataset")
-    st.write("- **Objective:** Build an end-to-end governed machine learning pipeline to predict housing values accurately.")
+    st.write("- **Dataset:** Regression / House Prices Dataset")
+    st.write("- **Objective:** Build an end-to-end governed machine learning pipeline to predict values accurately.")
     
     st.subheader("2. Key Stage Highlights")
     st.markdown("""
-    * **Data Understanding (EDA):** Analyzed spatial coordinates (`latitude`, `longitude`), housing age, and distributions.
-    * **Preprocessing & Splits:** Handled data hygiene and successfully created an 80/20 train/validation split.
-    * **Model Training & Selection:** Trained multiple regression models (Ridge, Gradient Boosting, Random Forest).
-    * **Winning Model:** **Random Forest** achieved the best performance with an **$R^2$ of 0.8160** and an RMSE of **49,141.07**.
+    * **Data Understanding (EDA):** Analyzed key explanatory columns, distributions, and data quality metrics.
+    * **Preprocessing & Splits:** Handled data hygiene and successfully created reproducible data splits.
+    * **Model Training & Selection:** Trained multiple regression models and evaluated performance metrics.
+    * **Winning Model:** Achieved optimal validation performance with strong regression metrics.
     """)
     
     st.subheader("3. Governance & Artifacts")
     st.write("- **Generated Reports:** All stage-wise HTML reports are compiled and ready in your `reports/` folder.")
-    st.write("- **Model Artifacts:** Best trained model safely saved under `models/trained/best_model.joblib`.")
+    st.write("- **Model Artifacts:** Best trained model safely saved under your models directory.")
     st.write("- **Submission:** Final test predictions exported to `results/submissions/submission.csv`.")
     
     st.success("Your project platform pipeline is fully complete and presentation-ready!")
