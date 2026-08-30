@@ -6,9 +6,13 @@ from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
+import sys
 
-# Resolve project root and paths
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+# Resolve project root correctly (2 levels up from src/preprocessing/ to project root)
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 SPLITS_DIR = PROJECT_ROOT / "data" / "splits"
 PROCESSED_DIR = PROJECT_ROOT / "data" / "processed"
 MODELS_DIR = PROJECT_ROOT / "models" / "artifacts"
@@ -91,7 +95,7 @@ def run_preprocessing():
 
     if test_df is not None:
         X_test = preprocessor.transform(test_eng[num_cols + cat_cols])
-        y_test = test_eng[target_col].to_numpy() if target_col in test_eng.columns else None
+        y_test = test_df[target_col].to_numpy() if target_col in test_df.columns else None
         np.savez(PROCESSED_DIR / "test.npz", X=X_test, y=y_test)
 
     # Save fitted preprocessor artifact
