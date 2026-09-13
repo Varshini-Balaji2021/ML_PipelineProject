@@ -1,113 +1,678 @@
 from pathlib import Path
-import joblib
+
 import numpy as np
 import pandas as pd
-from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
-import sys
 
-# Resolve project root correctly (2 levels up from src/preprocessing/ to project root)
+
+# ============================================================
+# PROJECT PATHS
+# ============================================================
+
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
+
+# ------------------------------------------------------------
+# INPUT: CREATED BY src/split.py
+# ------------------------------------------------------------
 
 SPLITS_DIR = PROJECT_ROOT / "data" / "splits"
+
+TRAIN_INPUT_PATH = SPLITS_DIR / "train.csv"
+VALIDATION_INPUT_PATH = SPLITS_DIR / "validation.csv"
+TEST_INPUT_PATH = SPLITS_DIR / "test.csv"
+
+# ------------------------------------------------------------
+# OUTPUT
+# ------------------------------------------------------------
+
 PROCESSED_DIR = PROJECT_ROOT / "data" / "processed"
-MODELS_DIR = PROJECT_ROOT / "models" / "artifacts"
+
+TRAIN_OUTPUT_PATH = PROCESSED_DIR / "train.csv"
+VALIDATION_OUTPUT_PATH = (
+    PROCESSED_DIR / "final_engineered_val.csv"
+)
+TEST_OUTPUT_PATH = (
+    PROCESSED_DIR / "test.csv"
+)
+
+X_VAL_PATH = PROCESSED_DIR / "X_val.npy"
+Y_VAL_PATH = PROCESSED_DIR / "y_val.npy"
+
+FEATURE_NAMES_PATH = (
+    PROCESSED_DIR / "feature_names.csv"
+)
+
+TARGET_COL = "median_house_value"
 
 
-def compute_ratios(df: pd.DataFrame) -> pd.DataFrame:
-    """Compute engineered ratio features based on the approved feature plan."""
-    data = df.copy()
-    data["rooms_per_household"] = data["total_rooms"] / (data["households"] + 1e-6)
-    data["bedrooms_per_room"] = data["total_bedrooms"] / (data["total_rooms"] + 1e-6)
-    data["population_per_household"] = data["population"] / (data["households"] + 1e-6)
-    data["bedrooms_per_household"] = data["total_bedrooms"] / (data["households"] + 1e-6)
-    return data
+# ============================================================
+# LOAD SPLIT DATA
+# ============================================================
 
+def load_split_data():
+
+    required_files = {
+        "training": TRAIN_INPUT_PATH,
+        "validation": VALIDATION_INPUT_PATH,
+        "test": TEST_INPUT_PATH,
+    }
+
+    for name, path in required_files.items():
+
+        if not path.exists():
+
+            raise FileNotFoundError(
+                f"{name.capitalize()} split not found:\n"
+                f"{path}\n\n"
+                "Run src/split.py first."
+            )
+
+    train_df = pd.read_csv(
+        TRAIN_INPUT_PATH
+    )
+
+    validation_df = pd.read_csv(
+        VALIDATION_INPUT_PATH
+    )
+
+    test_df = pd.read_csv(
+        TEST_INPUT_PATH
+    )
+
+    for name, df in {
+        "training": train_df,
+        "validation": validation_df,
+        "test": test_df,
+    }.items():
+
+        if df.empty:
+            raise ValueError(
+                f"{name.capitalize()} dataset is empty."
+            )
+
+        if TARGET_COL not in df.columns:
+            raise ValueError(
+                f"Target column '{TARGET_COL}' "
+                f"is missing from {name} data."
+            )
+
+    print(
+        f"[INFO] Training input shape: "
+        f"{train_df.shape}"
+    )
+
+    print(
+        f"[INFO] Validation input shape: "
+        f"{validation_df.shape}"
+    )
+
+    print(
+        f"[INFO] Test input shape: "
+        f"{test_df.shape}"
+    )
+
+    return (
+        train_df,
+        validation_df,
+        test_df
+    )
+
+
+# ============================================================
+# FEATURE ENGINEERING
+# ============================================================
+
+def create_engineered_features(
+    df: pd.DataFrame
+) -> pd.DataFrame:
+
+    result = df.copy()
+
+    # --------------------------------------------------------
+    # Rooms per household
+    # --------------------------------------------------------
+
+    if {
+        "total_rooms",
+        "households"
+    }.issubset(result.columns):
+
+        denominator = (
+            result["households"]
+            .replace(0, np.nan)
+        )
+
+        result["rooms_per_household"] = (
+            result["total_rooms"]
+            / denominator
+        )
+
+    # --------------------------------------------------------
+    # Population per household
+    # --------------------------------------------------------
+
+    if {
+        "population",
+        "households"
+    }.issubset(result.columns):
+
+        denominator = (
+            result["households"]
+            .replace(0, np.nan)
+        )
+
+        result["population_per_household"] = (
+            result["population"]
+            / denominator
+        )
+
+    # --------------------------------------------------------
+    # Bedrooms per household
+    # --------------------------------------------------------
+
+    if {
+        "total_bedrooms",
+        "households"
+    }.issubset(result.columns):
+
+        denominator = (
+            result["households"]
+            .replace(0, np.nan)
+        )
+
+        result["bedrooms_per_household"] = (
+            result["total_bedrooms"]
+            / denominator
+        )
+
+    return result
+
+
+# ============================================================
+# SEPARATE TARGET
+# ============================================================
+
+def separate_target(df):
+
+    y = pd.to_numeric(
+        df[TARGET_COL],
+        errors="coerce"
+    )
+
+    X = df.drop(
+        columns=[TARGET_COL]
+    ).copy()
+
+    return X, y
+
+
+# ============================================================
+# ENCODE DATA
+# ============================================================
+
+def encode_data(
+    X_train,
+    X_validation,
+    X_test
+):
+
+    # --------------------------------------------------------
+    # Identify categorical columns using TRAINING data
+    # --------------------------------------------------------
+
+    categorical_columns = (
+        X_train
+        .select_dtypes(
+            include=["object", "category"]
+        )
+        .columns
+        .tolist()
+    )
+
+    # --------------------------------------------------------
+    # One-hot encoding
+    # --------------------------------------------------------
+
+    if categorical_columns:
+
+        X_train = pd.get_dummies(
+            X_train,
+            columns=categorical_columns,
+            drop_first=True,
+            dtype=float
+        )
+
+        X_validation = pd.get_dummies(
+            X_validation,
+            columns=categorical_columns,
+            drop_first=True,
+            dtype=float
+        )
+
+        X_test = pd.get_dummies(
+            X_test,
+            columns=categorical_columns,
+            drop_first=True,
+            dtype=float
+        )
+
+    # --------------------------------------------------------
+    # Make validation/test columns exactly match training
+    # --------------------------------------------------------
+
+    X_validation = X_validation.reindex(
+        columns=X_train.columns,
+        fill_value=0
+    )
+
+    X_test = X_test.reindex(
+        columns=X_train.columns,
+        fill_value=0
+    )
+
+    # --------------------------------------------------------
+    # Convert to numeric
+    # --------------------------------------------------------
+
+    X_train = X_train.apply(
+        pd.to_numeric,
+        errors="coerce"
+    )
+
+    X_validation = X_validation.apply(
+        pd.to_numeric,
+        errors="coerce"
+    )
+
+    X_test = X_test.apply(
+        pd.to_numeric,
+        errors="coerce"
+    )
+
+    # --------------------------------------------------------
+    # Replace infinity
+    # --------------------------------------------------------
+
+    X_train = X_train.replace(
+        [np.inf, -np.inf],
+        np.nan
+    )
+
+    X_validation = X_validation.replace(
+        [np.inf, -np.inf],
+        np.nan
+    )
+
+    X_test = X_test.replace(
+        [np.inf, -np.inf],
+        np.nan
+    )
+
+    return (
+        X_train,
+        X_validation,
+        X_test
+    )
+
+
+# ============================================================
+# IMPUTATION
+# ============================================================
+
+def impute_data(
+    X_train,
+    X_validation,
+    X_test
+):
+
+    # --------------------------------------------------------
+    # CRITICAL:
+    # Fit imputer ONLY on training data
+    # --------------------------------------------------------
+
+    imputer = SimpleImputer(
+        strategy="median"
+    )
+
+    X_train_processed = (
+        imputer.fit_transform(
+            X_train
+        )
+    )
+
+    X_validation_processed = (
+        imputer.transform(
+            X_validation
+        )
+    )
+
+    X_test_processed = (
+        imputer.transform(
+            X_test
+        )
+    )
+
+    return (
+        X_train_processed,
+        X_validation_processed,
+        X_test_processed
+    )
+
+
+# ============================================================
+# MAIN PREPROCESSING PIPELINE
+# ============================================================
 
 def run_preprocessing():
-    PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
-    MODELS_DIR.mkdir(parents=True, exist_ok=True)
 
-    train_path = SPLITS_DIR / "train.csv"
-    val_path = SPLITS_DIR / "validation.csv"
-    test_path = SPLITS_DIR / "test.csv"
+    print("=" * 70)
+    print("PREPROCESSING PIPELINE")
+    print("=" * 70)
 
-    if not train_path.exists():
-        raise FileNotFoundError(f"Missing train split: {train_path}. Please ensure splits are created.")
+    PROCESSED_DIR.mkdir(
+        parents=True,
+        exist_ok=True
+    )
 
-    train_df = pd.read_csv(train_path)
-    val_df = pd.read_csv(val_path) if val_path.exists() else None
-    test_df = pd.read_csv(test_path) if test_path.exists() else None
+    # --------------------------------------------------------
+    # 1. LOAD EXISTING SPLITS
+    # --------------------------------------------------------
 
-    # Compute engineered features
-    train_eng = compute_ratios(train_df)
-    if val_df is not None:
-        val_eng = compute_ratios(val_df)
-    if test_df is not None:
-        test_eng = compute_ratios(test_df)
+    print(
+        "\n[1/6] Loading train / validation / test splits..."
+    )
 
-    num_cols = [
-        "longitude",
-        "latitude",
-        "housing_median_age",
-        "total_rooms",
-        "total_bedrooms",
-        "population",
-        "households",
-        "median_income",
+    (
+        train_df,
+        validation_df,
+        test_df
+    ) = load_split_data()
+
+    # --------------------------------------------------------
+    # 2. FEATURE ENGINEERING
+    # --------------------------------------------------------
+
+    print(
+        "\n[2/6] Creating engineered features..."
+    )
+
+    train_df = create_engineered_features(
+        train_df
+    )
+
+    validation_df = create_engineered_features(
+        validation_df
+    )
+
+    test_df = create_engineered_features(
+        test_df
+    )
+
+    engineered_features = [
         "rooms_per_household",
-        "bedrooms_per_room",
         "population_per_household",
         "bedrooms_per_household",
     ]
-    cat_cols = ["ocean_proximity"]
-    target_col = "median_house_value"
 
-    num_pipeline = Pipeline([
-        ("imputer", SimpleImputer(strategy="median")),
-        ("scaler", StandardScaler()),
-    ])
+    print(
+        "[INFO] Engineered features:"
+    )
 
-    cat_pipeline = Pipeline([
-        ("imputer", SimpleImputer(strategy="most_frequent")),
-        ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
-    ])
+    for feature in engineered_features:
 
-    preprocessor = ColumnTransformer([
-        ("num", num_pipeline, num_cols),
-        ("cat", cat_pipeline, cat_cols),
-    ])
+        if feature in train_df.columns:
 
-    # Fit transformer strictly on training data
-    X_train = preprocessor.fit_transform(train_eng[num_cols + cat_cols])
-    y_train = train_eng[target_col].to_numpy() if target_col in train_eng.columns else None
+            print(
+    f"[OK] {feature}"
+)
 
-    np.savez(PROCESSED_DIR / "train.npz", X=X_train, y=y_train)
+    # --------------------------------------------------------
+    # 3. SEPARATE TARGET
+    # --------------------------------------------------------
 
-    if val_df is not None:
-        X_val = preprocessor.transform(val_eng[num_cols + cat_cols])
-        y_val = val_eng[target_col].to_numpy() if target_col in val_eng.columns else None
-        np.savez(PROCESSED_DIR / "val.npz", X=X_val, y=y_val)
+    print(
+        "\n[3/6] Separating target variable..."
+    )
 
-    if test_df is not None:
-        X_test = preprocessor.transform(test_eng[num_cols + cat_cols])
-        y_test = test_df[target_col].to_numpy() if target_col in test_df.columns else None
-        np.savez(PROCESSED_DIR / "test.npz", X=X_test, y=y_test)
+    (
+        X_train,
+        y_train
+    ) = separate_target(
+        train_df
+    )
 
-    # Save fitted preprocessor artifact
-    joblib.dump(preprocessor, MODELS_DIR / "preprocessor.joblib")
+    (
+        X_validation,
+        y_validation
+    ) = separate_target(
+        validation_df
+    )
 
-    print("Preprocessing completed successfully.")
-    print(f"Train feature matrix: {X_train.shape}")
-    if val_df is not None:
-        print(f"Validation feature matrix: {X_val.shape}")
-    if test_df is not None:
-        print(f"Test feature matrix: {X_test.shape}")
+    (
+        X_test,
+        y_test
+    ) = separate_target(
+        test_df
+    )
 
+    # Remove rows with missing target
+    train_valid = y_train.notna()
+    validation_valid = y_validation.notna()
+    test_valid = y_test.notna()
+
+    X_train = X_train.loc[
+        train_valid
+    ].reset_index(drop=True)
+
+    y_train = y_train.loc[
+        train_valid
+    ].reset_index(drop=True)
+
+    X_validation = X_validation.loc[
+        validation_valid
+    ].reset_index(drop=True)
+
+    y_validation = y_validation.loc[
+        validation_valid
+    ].reset_index(drop=True)
+
+    X_test = X_test.loc[
+        test_valid
+    ].reset_index(drop=True)
+
+    y_test = y_test.loc[
+        test_valid
+    ].reset_index(drop=True)
+
+    # --------------------------------------------------------
+    # 4. ENCODING
+    # --------------------------------------------------------
+
+    print(
+        "\n[4/6] Encoding categorical variables..."
+    )
+
+    (
+        X_train,
+        X_validation,
+        X_test
+    ) = encode_data(
+        X_train,
+        X_validation,
+        X_test
+    )
+
+    feature_names = (
+        X_train.columns.tolist()
+    )
+
+    print(
+        f"[INFO] Model features: "
+        f"{len(feature_names)}"
+    )
+
+    # --------------------------------------------------------
+    # 5. IMPUTATION
+    # --------------------------------------------------------
+
+    print(
+        "\n[5/6] Applying training-fitted imputation..."
+    )
+
+    (
+        X_train_processed,
+        X_validation_processed,
+        X_test_processed
+    ) = impute_data(
+        X_train,
+        X_validation,
+        X_test
+    )
+
+    # --------------------------------------------------------
+    # 6. SAVE
+    # --------------------------------------------------------
+
+    print(
+        "\n[6/6] Saving processed datasets..."
+    )
+
+    # Training
+    train_processed = pd.DataFrame(
+        X_train_processed,
+        columns=feature_names
+    )
+
+    train_processed[TARGET_COL] = (
+        y_train.to_numpy()
+    )
+
+    # Validation
+    validation_processed = pd.DataFrame(
+        X_validation_processed,
+        columns=feature_names
+    )
+
+    validation_processed[TARGET_COL] = (
+        y_validation.to_numpy()
+    )
+
+    # Test
+    test_processed = pd.DataFrame(
+        X_test_processed,
+        columns=feature_names
+    )
+
+    test_processed[TARGET_COL] = (
+        y_test.to_numpy()
+    )
+
+    # --------------------------------------------------------
+    # Save CSVs
+    # --------------------------------------------------------
+
+    train_processed.to_csv(
+        TRAIN_OUTPUT_PATH,
+        index=False
+    )
+
+    validation_processed.to_csv(
+        VALIDATION_OUTPUT_PATH,
+        index=False
+    )
+
+    test_processed.to_csv(
+        TEST_OUTPUT_PATH,
+        index=False
+    )
+
+    # --------------------------------------------------------
+    # Save validation arrays for Streamlit diagnostics
+    # --------------------------------------------------------
+
+    np.save(
+        X_VAL_PATH,
+        X_validation_processed
+    )
+
+    np.save(
+        Y_VAL_PATH,
+        y_validation.to_numpy(
+            dtype=float
+        )
+    )
+
+    # --------------------------------------------------------
+    # Save feature names
+    # --------------------------------------------------------
+
+    pd.DataFrame({
+        "feature_name": feature_names
+    }).to_csv(
+        FEATURE_NAMES_PATH,
+        index=False
+    )
+
+    # --------------------------------------------------------
+    # Output information
+    # --------------------------------------------------------
+
+    print(
+        f"\n[SAVED] {TRAIN_OUTPUT_PATH}"
+    )
+
+    print(
+        f"[SAVED] {VALIDATION_OUTPUT_PATH}"
+    )
+
+    print(
+        f"[SAVED] {TEST_OUTPUT_PATH}"
+    )
+
+    print(
+        f"[SAVED] {X_VAL_PATH}"
+    )
+
+    print(
+        f"[SAVED] {Y_VAL_PATH}"
+    )
+
+    print(
+        f"[SAVED] {FEATURE_NAMES_PATH}"
+    )
+
+    # --------------------------------------------------------
+    # Final summary
+    # --------------------------------------------------------
+
+    print("\n" + "=" * 70)
+    print("PREPROCESSING COMPLETED SUCCESSFULLY")
+    print("=" * 70)
+
+    print(
+        f"Training rows     : {len(train_processed)}"
+    )
+
+    print(
+        f"Validation rows   : {len(validation_processed)}"
+    )
+
+    print(
+        f"Test rows         : {len(test_processed)}"
+    )
+
+    print(
+        f"Model features    : {len(feature_names)}"
+    )
+
+    print(
+        "\n[SUCCESS] Preprocessing stage completed."
+    )
+
+
+# ============================================================
+# ENTRY POINT
+# ============================================================
 
 if __name__ == "__main__":
     run_preprocessing()

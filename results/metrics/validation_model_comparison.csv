@@ -1,4 +1,4 @@
-Model,Val_RMSE,Val_R2
-Random_Forest,49141.07,0.816
-Gradient_Boosting,50762.7,0.8036
-Ridge_Baseline,66246.76,0.6656
+Model,Val_RMSE,Val_MAE,Val_R2,Features
+Random_Forest,49260.33,32152.8,0.8151,15
+Gradient_Boosting,52196.95,36176.31,0.7924,15
+Ridge_Baseline,66545.35,48286.84,0.6625,15

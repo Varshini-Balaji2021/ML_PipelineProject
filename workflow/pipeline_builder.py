@@ -1,7 +1,8 @@
-import subprocess
 from pathlib import Path
+import subprocess
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+# PROJECT_ROOT is the parent of the 'workflow' folder (i.e., ML_Pipelineproject)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 def run_step(step_name, script_rel_path):
     print(f"▶ Running {step_name}...")
@@ -11,7 +12,7 @@ def run_step(step_name, script_rel_path):
         print(f"❌ Error: Script not found at {script_path}")
         return False
         
-    res = subprocess.run(["python", str(script_path)], capture_output=True, text=True)
+    res = subprocess.run(["python", str(script_path)], capture_output=True, text=True, cwd=str(PROJECT_ROOT))
     if res.returncode == 0:
         print(f"✅ {step_name} completed successfully!")
         print(res.stdout)
@@ -25,11 +26,11 @@ def run_full_pipeline():
     """Executes the end-to-end machine learning pipeline step-by-step."""
     print("🚀 Starting Full ML Pipeline Execution...")
     
-    # 1. Ingestion (Updated to match src/ingest.py)
+    # 1. Ingestion
     if not run_step("Ingestion", "src/ingest.py"):
         return
         
-    # 2. Preprocessing & Splitting (Updated to match src/preprocessing/preprocessing.py)
+    # 2. Preprocessing & Splitting
     if not run_step("Preprocessing", "src/preprocessing/preprocessing.py"):
         return
         
@@ -37,7 +38,7 @@ def run_full_pipeline():
     if not run_step("Model Training", "src/modeling/train.py"):
         return
         
-    # 4. Evaluation (Updated path)
+    # 4. Evaluation
     if not run_step("Evaluation", "src/evaluation/evaluate.py"):
         return
         

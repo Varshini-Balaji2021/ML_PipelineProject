@@ -1,0 +1,57 @@
+{
+    "registry_version": "2.0",
+    "generated_at": "2026-09-13T16:02:09.674591",
+    "project": {
+        "name": "California House Prices",
+        "problem_type": "Regression",
+        "target": "median_house_value"
+    },
+    "data_registry": {
+        "source": "C:\\Users\\varsh\\OneDrive\\Attachments\\Desktop\\ML_Pipelineproject\\data\\raw\\housing.csv",
+        "sha256": "b214a65099c1dcc2ea7797935aff103fa0445220a366fb74beacb59486e548ff",
+        "rows": 20640,
+        "total_columns": 10
+    },
+    "feature_store": {
+        "selected_features": [
+            "median_income",
+            "housing_median_age",
+            "total_rooms",
+            "total_bedrooms",
+            "population",
+            "households",
+            "ocean_proximity",
+            "rooms_per_household",
+            "population_per_household",
+            "bedrooms_per_household"
+        ],
+        "feature_count": 10
+    },
+    "model_registry": {
+        "best_model": "C:\\Users\\varsh\\OneDrive\\Attachments\\Desktop\\ML_Pipelineproject\\models\\trained\\best_model.joblib",
+        "available": true,
+        "comparison_results": [
+            {
+                "Model": "Random_Forest",
+                "Val_RMSE": 49260.33,
+                "Val_MAE": 32152.8,
+                "Val_R2": 0.8151,
+                "Features": 15
+            },
+            {
+                "Model": "Gradient_Boosting",
+                "Val_RMSE": 52196.95,
+                "Val_MAE": 36176.31,
+                "Val_R2": 0.7924,
+                "Features": 15
+            },
+            {
+                "Model": "Ridge_Baseline",
+                "Val_RMSE": 66545.35,
+                "Val_MAE": 48286.84,
+                "Val_R2": 0.6625,
+                "Features": 15
+            }
+        ]
+    }
+}

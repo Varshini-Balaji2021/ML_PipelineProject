@@ -1,0 +1,158 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>California House Prices - ML Report</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #F8FAFC;
+    color: #1E293B;
+    margin: 0;
+    padding: 40px;
+}
+
+.container {
+    max-width: 1000px;
+    margin: auto;
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+}
+
+h1 {
+    color: #0F172A;
+}
+
+h2 {
+    color: #2563EB;
+    margin-top: 30px;
+}
+
+.cards {
+    display: flex;
+    gap: 15px;
+}
+
+.card {
+    flex: 1;
+    background: #F1F5F9;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.card strong {
+    display: block;
+    font-size: 20px;
+    margin-top: 8px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    background: #2563EB;
+    color: white;
+    padding: 10px;
+    text-align: left;
+}
+
+td {
+    padding: 10px;
+    border-bottom: 1px solid #E2E8F0;
+}
+
+.insight {
+    background: #EFF6FF;
+    padding: 20px;
+    border-radius: 8px;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>🏠 California House Prices Prediction Report</h1>
+
+<p>
+Generated on:
+2026-09-13 16:02:09
+</p>
+
+<h2>Project Overview</h2>
+
+<div class="cards">
+
+<div class="card">
+Dataset Rows
+<strong>20,640</strong>
+</div>
+
+<div class="card">
+Selected Features
+<strong>10</strong>
+</div>
+
+<div class="card">
+Best Model
+<strong>Random_Forest</strong>
+</div>
+
+</div>
+
+<h2>Selected Features</h2>
+
+<p>
+median_income, housing_median_age, total_rooms, total_bedrooms, population, households, ocean_proximity, rooms_per_household, population_per_household, bedrooms_per_household
+</p>
+
+<h2>Model Validation & Comparison</h2>
+
+<table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Model</th>
+      <th>Val_RMSE</th>
+      <th>Val_MAE</th>
+      <th>Val_R2</th>
+      <th>Features</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Random_Forest</td>
+      <td>49260.33</td>
+      <td>32152.80</td>
+      <td>0.8151</td>
+      <td>15</td>
+    </tr>
+    <tr>
+      <td>Gradient_Boosting</td>
+      <td>52196.95</td>
+      <td>36176.31</td>
+      <td>0.7924</td>
+      <td>15</td>
+    </tr>
+    <tr>
+      <td>Ridge_Baseline</td>
+      <td>66545.35</td>
+      <td>48286.84</td>
+      <td>0.6625</td>
+      <td>15</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Executive Insights</h2>
+
+<div class="insight">
+The model development workflow used 10 selected input features. Models were compared using validation RMSE, MAE, and R².
+</div>
+
+</div>
+</body>
+</html>
