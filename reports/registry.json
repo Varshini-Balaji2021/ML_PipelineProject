@@ -1,6 +1,6 @@
 {
     "registry_version": "2.0",
-    "generated_at": "2026-09-13T16:02:09.674591",
+    "generated_at": "2026-09-15T22:37:16.170151",
     "project": {
         "name": "California House Prices",
         "problem_type": "Regression",
@@ -33,24 +33,24 @@
         "comparison_results": [
             {
                 "Model": "Random_Forest",
-                "Val_RMSE": 49260.33,
-                "Val_MAE": 32152.8,
-                "Val_R2": 0.8151,
-                "Features": 15
+                "Val_RMSE": 57141.25,
+                "Val_MAE": 40274.9,
+                "Val_R2": 0.7512,
+                "Features": 13
             },
             {
                 "Model": "Gradient_Boosting",
-                "Val_RMSE": 52196.95,
-                "Val_MAE": 36176.31,
-                "Val_R2": 0.7924,
-                "Features": 15
+                "Val_RMSE": 58466.53,
+                "Val_MAE": 41695.66,
+                "Val_R2": 0.7395,
+                "Features": 13
             },
             {
                 "Model": "Ridge_Baseline",
-                "Val_RMSE": 66545.35,
-                "Val_MAE": 48286.84,
-                "Val_R2": 0.6625,
-                "Features": 15
+                "Val_RMSE": 68082.64,
+                "Val_MAE": 49370.12,
+                "Val_R2": 0.6468,
+                "Features": 13
             }
         ]
     }

@@ -1,158 +1,587 @@
 
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="utf-8">
-        <title>EDA Analytical Summary</title>
-        <style>
-            body { font-family: Arial, sans-serif; margin: 40px; background-color: #f9f9f9; color: #333; }
-            h1 { color: #1f4e79; }
-            h2 { color: #2e75b6; border-bottom: 2px solid #ddd; padding-bottom: 5px; margin-top: 30px; }
-            table { border-collapse: collapse; width: 100%; margin: 15px 0; background: #fff; }
-            th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-            th { background-color: #f2f2f2; }
-            .container { background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.05); }
-            .footer { margin-top: 40px; font-size: 12px; color: #666; text-align: center; }
-        </style>
-    </head>
-    <body>
-    <div class="container">
-        <h1>EDA Analytical Summary</h1>
-        <p><strong>Generated:</strong> 2026-08-28 12:02</p>
-    <h2>Overview</h2>
-<p>This report summarizes the candidate explanatory variables from your exploratory data analysis stage.</p>
-<h2>Candidate Explanatory Variables</h2>
-<table border="1" class="dataframe table">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+
+<title>California Housing — EDA Report</title>
+
+<style>
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 40px;
+    line-height: 1.6;
+    color: #222;
+}
+
+h1 {
+    margin-bottom: 5px;
+}
+
+h2 {
+    margin-top: 35px;
+}
+
+.summary {
+    display: flex;
+    gap: 20px;
+    margin: 25px 0;
+}
+
+.card {
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 8px;
+    min-width: 150px;
+}
+
+.card strong {
+    display: block;
+    font-size: 22px;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.data-table th,
+.data-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.data-table th {
+    font-weight: bold;
+}
+
+li {
+    margin-bottom: 10px;
+}
+
+.footer {
+    margin-top: 40px;
+    padding-top: 15px;
+    border-top: 1px solid #ddd;
+    font-size: 13px;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>California Housing — Exploratory Data Analysis Report</h1>
+
+<p>
+Generated from the raw California Housing dataset.
+</p>
+
+<div class="summary">
+
+<div class="card">
+<strong>20,640</strong>
+Rows
+</div>
+
+<div class="card">
+<strong>10</strong>
+Columns
+</div>
+
+<div class="card">
+<strong>207</strong>
+Missing Cells
+</div>
+
+<div class="card">
+<strong>0</strong>
+Duplicate Rows
+</div>
+
+</div>
+
+<h2>1. Dataset Structure</h2>
+
+<table class="dataframe data-table">
   <thead>
     <tr style="text-align: right;">
-      <th>feature</th>
-      <th>semantic_type</th>
-      <th>business_rationale</th>
-      <th>expected_relationship</th>
-      <th>correlation_with_target</th>
-      <th>observed_linear_association</th>
-      <th>exploratory_nonlinearity</th>
-      <th>potential_outlier_percentage</th>
-      <th>candidate_status</th>
-      <th>final_decision_rule</th>
+      <th>Column</th>
+      <th>Data Type</th>
+      <th>Missing Values</th>
+      <th>Missing %</th>
+      <th>Unique Values</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>longitude</td>
-      <td>spatial_coordinate</td>
-      <td>Geographic position may capture regional market structure and nonlinear spatial effects.</td>
-      <td>Expected regional and nonlinear spatial variation.</td>
-      <td>-0.052345</td>
-      <td>Very weak marginal linear association</td>
-      <td>Strong nonlinear pattern</td>
-      <td>0.000000</td>
-      <td>RETAIN AS CANDIDATE</td>
-      <td>Use validation for ML; use theory, VIF/estimability, specification, diagnostics, robust inference, and test evidence for inference.</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>844</td>
     </tr>
     <tr>
       <td>latitude</td>
-      <td>spatial_coordinate</td>
-      <td>Geographic position may capture regional market structure and nonlinear spatial effects.</td>
-      <td>Expected regional and nonlinear spatial variation.</td>
-      <td>-0.137864</td>
-      <td>Weak marginal linear association</td>
-      <td>Strong nonlinear pattern</td>
-      <td>0.989756</td>
-      <td>RETAIN AS CANDIDATE</td>
-      <td>Use validation for ML; use theory, VIF/estimability, specification, diagnostics, robust inference, and test evidence for inference.</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>862</td>
     </tr>
     <tr>
       <td>housing_median_age</td>
-      <td>discrete_numeric</td>
-      <td>The variable may have a nonlinear or piecewise relationship with house value.</td>
-      <td>Possible nonlinear or threshold effect.</td>
-      <td>0.116305</td>
-      <td>Weak marginal linear association</td>
-      <td>Moderate curvature</td>
-      <td>0.000000</td>
-      <td>RETAIN AS CANDIDATE</td>
-      <td>Use validation for ML; use theory, VIF/estimability, specification, diagnostics, robust inference, and test evidence for inference.</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>52</td>
     </tr>
     <tr>
       <td>total_rooms</td>
-      <td>count</td>
-      <td>The variable may contribute through scale, density, ratio, or interaction effects.</td>
-      <td>Ambiguous raw-scale effect; ratios may be more informative.</td>
-      <td>0.136801</td>
-      <td>Weak marginal linear association</td>
-      <td>Moderate curvature</td>
-      <td>6.298450</td>
-      <td>RETAIN AS CANDIDATE</td>
-      <td>Use validation for ML; use theory, VIF/estimability, specification, diagnostics, robust inference, and test evidence for inference.</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>5926</td>
     </tr>
     <tr>
       <td>total_bedrooms</td>
-      <td>count</td>
-      <td>The variable may contribute through scale, density, ratio, or interaction effects.</td>
-      <td>Ambiguous raw-scale effect; ratios may be more informative.</td>
-      <td>0.049523</td>
-      <td>Very weak marginal linear association</td>
-      <td>Moderate curvature</td>
-      <td>6.263843</td>
-      <td>RETAIN AS CANDIDATE</td>
-      <td>Use validation for ML; use theory, VIF/estimability, specification, diagnostics, robust inference, and test evidence for inference.</td>
+      <td>float64</td>
+      <td>207</td>
+      <td>1.0</td>
+      <td>1923</td>
     </tr>
     <tr>
       <td>population</td>
-      <td>count</td>
-      <td>The variable may contribute through scale, density, ratio, or interaction effects.</td>
-      <td>Possible density and congestion effect.</td>
-      <td>-0.024592</td>
-      <td>Very weak marginal linear association</td>
-      <td>Moderate curvature</td>
-      <td>5.966224</td>
-      <td>RETAIN AS CANDIDATE</td>
-      <td>Use validation for ML; use theory, VIF/estimability, specification, diagnostics, robust inference, and test evidence for inference.</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>3888</td>
     </tr>
     <tr>
       <td>households</td>
-      <td>count</td>
-      <td>The variable may contribute through scale, density, ratio, or interaction effects.</td>
-      <td>Possible block-size and occupancy effect.</td>
-      <td>0.066788</td>
-      <td>Very weak marginal linear association</td>
-      <td>Moderate curvature</td>
-      <td>6.049280</td>
-      <td>RETAIN AS CANDIDATE</td>
-      <td>Use validation for ML; use theory, VIF/estimability, specification, diagnostics, robust inference, and test evidence for inference.</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>1815</td>
     </tr>
     <tr>
       <td>median_income</td>
-      <td>continuous_numeric</td>
-      <td>The variable remains conceptually relevant and should be assessed jointly with other predictors.</td>
-      <td>Expected positive association with house value.</td>
-      <td>0.687873</td>
-      <td>Strong marginal linear association</td>
-      <td>Moderate curvature</td>
-      <td>3.377630</td>
-      <td>RETAIN AS CANDIDATE</td>
-      <td>Use validation for ML; use theory, VIF/estimability, specification, diagnostics, robust inference, and test evidence for inference.</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>12928</td>
+    </tr>
+    <tr>
+      <td>median_house_value</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>3842</td>
     </tr>
     <tr>
       <td>ocean_proximity</td>
-      <td>nominal_categorical</td>
-      <td>Systematic differences between categories may explain house-price variation.</td>
-      <td>Expected systematic differences across categories.</td>
-      <td>NaN</td>
-      <td>Categorical predictor</td>
-      <td>Not applicable</td>
-      <td>0.000000</td>
-      <td>RETAIN AS CANDIDATE</td>
-      <td>Use validation for ML; use theory, VIF/estimability, specification, diagnostics, robust inference, and test evidence for inference.</td>
+      <td>str</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>5</td>
     </tr>
   </tbody>
 </table>
 
-        <div class="footer">
-            AI-Assisted ML Project Platform | Governance & Reporting Layer
-        </div>
-    </div>
-    </body>
-    </html>
-    
+<h2>2. Data Quality</h2>
+
+<h3>Missing Values</h3>
+
+<table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Feature</th>
+      <th>Missing Count</th>
+      <th>Missing %</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>total_bedrooms</td>
+      <td>207</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <td>longitude</td>
+      <td>0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <td>latitude</td>
+      <td>0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <td>housing_median_age</td>
+      <td>0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <td>total_rooms</td>
+      <td>0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <td>population</td>
+      <td>0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <td>households</td>
+      <td>0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <td>median_income</td>
+      <td>0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <td>median_house_value</td>
+      <td>0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <td>ocean_proximity</td>
+      <td>0</td>
+      <td>0.0</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Duplicate Rows</h3>
+
+<p>
+The dataset contains 0 duplicate rows.
+</p>
+
+<h2>3. Descriptive Statistics</h2>
+
+<table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>count</th>
+      <th>mean</th>
+      <th>median</th>
+      <th>std</th>
+      <th>min</th>
+      <th>25%</th>
+      <th>50%</th>
+      <th>75%</th>
+      <th>max</th>
+      <th>missing</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>longitude</th>
+      <td>20640.0</td>
+      <td>-119.570</td>
+      <td>-118.490</td>
+      <td>2.004</td>
+      <td>-124.35</td>
+      <td>-121.800</td>
+      <td>-118.490</td>
+      <td>-118.010</td>
+      <td>-114.31</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>latitude</th>
+      <td>20640.0</td>
+      <td>35.632</td>
+      <td>34.260</td>
+      <td>2.136</td>
+      <td>32.54</td>
+      <td>33.930</td>
+      <td>34.260</td>
+      <td>37.710</td>
+      <td>41.95</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>housing_median_age</th>
+      <td>20640.0</td>
+      <td>28.639</td>
+      <td>29.000</td>
+      <td>12.586</td>
+      <td>1.00</td>
+      <td>18.000</td>
+      <td>29.000</td>
+      <td>37.000</td>
+      <td>52.00</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>total_rooms</th>
+      <td>20640.0</td>
+      <td>2635.763</td>
+      <td>2127.000</td>
+      <td>2181.615</td>
+      <td>2.00</td>
+      <td>1447.750</td>
+      <td>2127.000</td>
+      <td>3148.000</td>
+      <td>39320.00</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>total_bedrooms</th>
+      <td>20433.0</td>
+      <td>537.871</td>
+      <td>435.000</td>
+      <td>421.385</td>
+      <td>1.00</td>
+      <td>296.000</td>
+      <td>435.000</td>
+      <td>647.000</td>
+      <td>6445.00</td>
+      <td>207</td>
+    </tr>
+    <tr>
+      <th>population</th>
+      <td>20640.0</td>
+      <td>1425.477</td>
+      <td>1166.000</td>
+      <td>1132.462</td>
+      <td>3.00</td>
+      <td>787.000</td>
+      <td>1166.000</td>
+      <td>1725.000</td>
+      <td>35682.00</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>households</th>
+      <td>20640.0</td>
+      <td>499.540</td>
+      <td>409.000</td>
+      <td>382.330</td>
+      <td>1.00</td>
+      <td>280.000</td>
+      <td>409.000</td>
+      <td>605.000</td>
+      <td>6082.00</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>median_income</th>
+      <td>20640.0</td>
+      <td>3.871</td>
+      <td>3.535</td>
+      <td>1.900</td>
+      <td>0.50</td>
+      <td>2.563</td>
+      <td>3.535</td>
+      <td>4.743</td>
+      <td>15.00</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>median_house_value</th>
+      <td>20640.0</td>
+      <td>206855.817</td>
+      <td>179700.000</td>
+      <td>115395.616</td>
+      <td>14999.00</td>
+      <td>119600.000</td>
+      <td>179700.000</td>
+      <td>264725.000</td>
+      <td>500001.00</td>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>4. Target Variable</h2>
+
+<p>
+The target variable is <strong>median_house_value</strong>.
+</p>
+
+<h2>5. Correlation Analysis</h2>
+
+<table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>longitude</th>
+      <th>latitude</th>
+      <th>housing_median_age</th>
+      <th>total_rooms</th>
+      <th>total_bedrooms</th>
+      <th>population</th>
+      <th>households</th>
+      <th>median_income</th>
+      <th>median_house_value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>longitude</th>
+      <td>1.000</td>
+      <td>-0.925</td>
+      <td>-0.108</td>
+      <td>0.045</td>
+      <td>0.070</td>
+      <td>0.100</td>
+      <td>0.055</td>
+      <td>-0.015</td>
+      <td>-0.046</td>
+    </tr>
+    <tr>
+      <th>latitude</th>
+      <td>-0.925</td>
+      <td>1.000</td>
+      <td>0.011</td>
+      <td>-0.036</td>
+      <td>-0.067</td>
+      <td>-0.109</td>
+      <td>-0.071</td>
+      <td>-0.080</td>
+      <td>-0.144</td>
+    </tr>
+    <tr>
+      <th>housing_median_age</th>
+      <td>-0.108</td>
+      <td>0.011</td>
+      <td>1.000</td>
+      <td>-0.361</td>
+      <td>-0.320</td>
+      <td>-0.296</td>
+      <td>-0.303</td>
+      <td>-0.119</td>
+      <td>0.106</td>
+    </tr>
+    <tr>
+      <th>total_rooms</th>
+      <td>0.045</td>
+      <td>-0.036</td>
+      <td>-0.361</td>
+      <td>1.000</td>
+      <td>0.930</td>
+      <td>0.857</td>
+      <td>0.918</td>
+      <td>0.198</td>
+      <td>0.134</td>
+    </tr>
+    <tr>
+      <th>total_bedrooms</th>
+      <td>0.070</td>
+      <td>-0.067</td>
+      <td>-0.320</td>
+      <td>0.930</td>
+      <td>1.000</td>
+      <td>0.878</td>
+      <td>0.980</td>
+      <td>-0.008</td>
+      <td>0.050</td>
+    </tr>
+    <tr>
+      <th>population</th>
+      <td>0.100</td>
+      <td>-0.109</td>
+      <td>-0.296</td>
+      <td>0.857</td>
+      <td>0.878</td>
+      <td>1.000</td>
+      <td>0.907</td>
+      <td>0.005</td>
+      <td>-0.025</td>
+    </tr>
+    <tr>
+      <th>households</th>
+      <td>0.055</td>
+      <td>-0.071</td>
+      <td>-0.303</td>
+      <td>0.918</td>
+      <td>0.980</td>
+      <td>0.907</td>
+      <td>1.000</td>
+      <td>0.013</td>
+      <td>0.066</td>
+    </tr>
+    <tr>
+      <th>median_income</th>
+      <td>-0.015</td>
+      <td>-0.080</td>
+      <td>-0.119</td>
+      <td>0.198</td>
+      <td>-0.008</td>
+      <td>0.005</td>
+      <td>0.013</td>
+      <td>1.000</td>
+      <td>0.688</td>
+    </tr>
+    <tr>
+      <th>median_house_value</th>
+      <td>-0.046</td>
+      <td>-0.144</td>
+      <td>0.106</td>
+      <td>0.134</td>
+      <td>0.050</td>
+      <td>-0.025</td>
+      <td>0.066</td>
+      <td>0.688</td>
+      <td>1.000</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>6. Key EDA Insights</h2>
+
+<ul>
+<li>The target variable &#x27;median_house_value&#x27; contains 20,640 non-missing observations and has a mean of 206,855.82.</li><li>Missing values are present in the dataset. The feature with the highest missing count is &#x27;total_bedrooms&#x27; with 207 missing values.</li><li>Median income has a positive relationship with median house value (correlation = 0.688).</li><li>&#x27;ocean_proximity&#x27; is a categorical variable and &#x27;&lt;1H OCEAN&#x27; is its most frequent category.</li><li>Longitude and latitude provide geographic information, allowing spatial differences in housing values to be examined during exploratory analysis.</li><li>Several continuous variables contain potential extreme observations based on the IQR rule. These observations should be evaluated rather than automatically removed.</li>
+</ul>
+
+<h2>7. EDA → ML Pipeline Decisions</h2>
+
+<table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>EDA Finding</th>
+      <th>Pipeline Implication</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Dataset contains numerical and categorical variables</td>
+      <td>Separate numerical and categorical preprocessing is required</td>
+    </tr>
+    <tr>
+      <td>Variables have different scales and distributions</td>
+      <td>Scaling is considered during preprocessing</td>
+    </tr>
+    <tr>
+      <td>Missing values may be present</td>
+      <td>Imputation is required where applicable</td>
+    </tr>
+    <tr>
+      <td>Categorical variable: ocean_proximity</td>
+      <td>Categorical encoding is required</td>
+    </tr>
+    <tr>
+      <td>Derived relationships exist between housing variables</td>
+      <td>Feature engineering can create additional predictive variables</td>
+    </tr>
+    <tr>
+      <td>Potential extreme observations exist</td>
+      <td>Outliers should be investigated before modeling</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="footer">
+California Housing ML Pipeline — EDA Stage
+</div>
+
+</body>
+</html>

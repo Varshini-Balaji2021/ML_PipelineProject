@@ -28,9 +28,11 @@ TEST_INPUT_PATH = SPLITS_DIR / "test.csv"
 PROCESSED_DIR = PROJECT_ROOT / "data" / "processed"
 
 TRAIN_OUTPUT_PATH = PROCESSED_DIR / "train.csv"
+
 VALIDATION_OUTPUT_PATH = (
     PROCESSED_DIR / "final_engineered_val.csv"
 )
+
 TEST_OUTPUT_PATH = (
     PROCESSED_DIR / "test.csv"
 )
@@ -42,11 +44,23 @@ FEATURE_NAMES_PATH = (
     PROCESSED_DIR / "feature_names.csv"
 )
 
+# ------------------------------------------------------------
+# FEATURE STORE CREATED BY STREAMLIT STAGE 3
+# ------------------------------------------------------------
+
+FEATURE_STORE_PATH = (
+    PROCESSED_DIR / "final_engineered_train.csv"
+)
+
+# ------------------------------------------------------------
+# TARGET
+# ------------------------------------------------------------
+
 TARGET_COL = "median_house_value"
 
 
 # ============================================================
-# LOAD SPLIT DATA
+# 1. LOAD SPLIT DATA
 # ============================================================
 
 def load_split_data():
@@ -57,6 +71,10 @@ def load_split_data():
         "test": TEST_INPUT_PATH,
     }
 
+    # --------------------------------------------------------
+    # Check required files
+    # --------------------------------------------------------
+
     for name, path in required_files.items():
 
         if not path.exists():
@@ -66,6 +84,10 @@ def load_split_data():
                 f"{path}\n\n"
                 "Run src/split.py first."
             )
+
+    # --------------------------------------------------------
+    # Load datasets
+    # --------------------------------------------------------
 
     train_df = pd.read_csv(
         TRAIN_INPUT_PATH
@@ -79,6 +101,10 @@ def load_split_data():
         TEST_INPUT_PATH
     )
 
+    # --------------------------------------------------------
+    # Validate datasets
+    # --------------------------------------------------------
+
     for name, df in {
         "training": train_df,
         "validation": validation_df,
@@ -86,15 +112,21 @@ def load_split_data():
     }.items():
 
         if df.empty:
+
             raise ValueError(
                 f"{name.capitalize()} dataset is empty."
             )
 
         if TARGET_COL not in df.columns:
+
             raise ValueError(
                 f"Target column '{TARGET_COL}' "
                 f"is missing from {name} data."
             )
+
+    # --------------------------------------------------------
+    # Print input shapes
+    # --------------------------------------------------------
 
     print(
         f"[INFO] Training input shape: "
@@ -119,7 +151,7 @@ def load_split_data():
 
 
 # ============================================================
-# FEATURE ENGINEERING
+# 2. FEATURE ENGINEERING
 # ============================================================
 
 def create_engineered_features(
@@ -189,15 +221,155 @@ def create_engineered_features(
 
 
 # ============================================================
-# SEPARATE TARGET
+# 2B. APPLY SELECTED FEATURES
+# ============================================================
+
+def apply_selected_features(
+    train_df: pd.DataFrame,
+    validation_df: pd.DataFrame,
+    test_df: pd.DataFrame
+):
+    """
+    Apply the feature selection made in Streamlit Stage 3.
+
+    The feature store is used only to determine which columns
+    were selected.
+
+    The actual train, validation, and test values still come
+    from their respective split datasets.
+
+    This prevents data leakage between the datasets.
+    """
+
+    # --------------------------------------------------------
+    # Check feature store
+    # --------------------------------------------------------
+
+    if not FEATURE_STORE_PATH.exists():
+
+        raise FileNotFoundError(
+            "Selected feature store not found:\n"
+            f"{FEATURE_STORE_PATH}\n\n"
+            "Run Feature Engineering and save the selected "
+            "features from Streamlit Stage 3 first."
+        )
+
+    # --------------------------------------------------------
+    # Load selected feature store
+    # --------------------------------------------------------
+
+    selected_df = pd.read_csv(
+        FEATURE_STORE_PATH
+    )
+
+    if selected_df.empty:
+
+        raise ValueError(
+            "Selected feature store is empty."
+        )
+
+    # --------------------------------------------------------
+    # Identify selected features
+    # --------------------------------------------------------
+
+    selected_features = [
+        column
+        for column in selected_df.columns
+        if column != TARGET_COL
+    ]
+
+    if not selected_features:
+
+        raise ValueError(
+            "No selected features found in the feature store."
+        )
+
+    # --------------------------------------------------------
+    # Check selected features exist in every split
+    # --------------------------------------------------------
+
+    for name, df in {
+        "training": train_df,
+        "validation": validation_df,
+        "test": test_df,
+    }.items():
+
+        missing = [
+            feature
+            for feature in selected_features
+            if feature not in df.columns
+        ]
+
+        if missing:
+
+            raise ValueError(
+                f"Selected features missing from "
+                f"{name} dataset:\n"
+                + ", ".join(missing)
+            )
+
+    # --------------------------------------------------------
+    # Keep selected features + target
+    # --------------------------------------------------------
+
+    columns_to_keep = (
+        selected_features
+        + [TARGET_COL]
+    )
+
+    train_df = train_df[
+        columns_to_keep
+    ].copy()
+
+    validation_df = validation_df[
+        columns_to_keep
+    ].copy()
+
+    test_df = test_df[
+        columns_to_keep
+    ].copy()
+
+    # --------------------------------------------------------
+    # Print selected features
+    # --------------------------------------------------------
+
+    print(
+        f"[INFO] Selected features applied: "
+        f"{len(selected_features)}"
+    )
+
+    for feature in selected_features:
+
+        print(
+            f"[OK] {feature}"
+        )
+
+    return (
+        train_df,
+        validation_df,
+        test_df,
+        selected_features
+    )
+
+
+# ============================================================
+# 3. SEPARATE TARGET
 # ============================================================
 
 def separate_target(df):
+
+    # --------------------------------------------------------
+    # Target
+    # --------------------------------------------------------
 
     y = pd.to_numeric(
         df[TARGET_COL],
         errors="coerce"
     )
+
+    # --------------------------------------------------------
+    # Features
+    # --------------------------------------------------------
 
     X = df.drop(
         columns=[TARGET_COL]
@@ -207,7 +379,7 @@ def separate_target(df):
 
 
 # ============================================================
-# ENCODE DATA
+# 4. ENCODE DATA
 # ============================================================
 
 def encode_data(
@@ -316,7 +488,7 @@ def encode_data(
 
 
 # ============================================================
-# IMPUTATION
+# 5. IMPUTATION
 # ============================================================
 
 def impute_data(
@@ -334,17 +506,29 @@ def impute_data(
         strategy="median"
     )
 
+    # --------------------------------------------------------
+    # Training
+    # --------------------------------------------------------
+
     X_train_processed = (
         imputer.fit_transform(
             X_train
         )
     )
 
+    # --------------------------------------------------------
+    # Validation
+    # --------------------------------------------------------
+
     X_validation_processed = (
         imputer.transform(
             X_validation
         )
     )
+
+    # --------------------------------------------------------
+    # Test
+    # --------------------------------------------------------
 
     X_test_processed = (
         imputer.transform(
@@ -360,7 +544,7 @@ def impute_data(
 
 
 # ============================================================
-# MAIN PREPROCESSING PIPELINE
+# 6. MAIN PREPROCESSING PIPELINE
 # ============================================================
 
 def run_preprocessing():
@@ -369,14 +553,18 @@ def run_preprocessing():
     print("PREPROCESSING PIPELINE")
     print("=" * 70)
 
+    # --------------------------------------------------------
+    # Create processed directory
+    # --------------------------------------------------------
+
     PROCESSED_DIR.mkdir(
         parents=True,
         exist_ok=True
     )
 
-    # --------------------------------------------------------
+    # ========================================================
     # 1. LOAD EXISTING SPLITS
-    # --------------------------------------------------------
+    # ========================================================
 
     print(
         "\n[1/6] Loading train / validation / test splits..."
@@ -388,9 +576,9 @@ def run_preprocessing():
         test_df
     ) = load_split_data()
 
-    # --------------------------------------------------------
+    # ========================================================
     # 2. FEATURE ENGINEERING
-    # --------------------------------------------------------
+    # ========================================================
 
     print(
         "\n[2/6] Creating engineered features..."
@@ -408,6 +596,10 @@ def run_preprocessing():
         test_df
     )
 
+    # --------------------------------------------------------
+    # Display engineered features
+    # --------------------------------------------------------
+
     engineered_features = [
         "rooms_per_household",
         "population_per_household",
@@ -423,12 +615,40 @@ def run_preprocessing():
         if feature in train_df.columns:
 
             print(
-    f"[OK] {feature}"
-)
+                f"[OK] {feature}"
+            )
+
+    # ========================================================
+    # 2B. APPLY SELECTED FEATURES
+    # ========================================================
+
+    print(
+        "\n[2B] Applying selected features..."
+    )
+
+    (
+        train_df,
+        validation_df,
+        test_df,
+        selected_features
+    ) = apply_selected_features(
+        train_df,
+        validation_df,
+        test_df
+    )
 
     # --------------------------------------------------------
-    # 3. SEPARATE TARGET
+    # Display selected feature count
     # --------------------------------------------------------
+
+    print(
+        f"[INFO] Total selected raw features: "
+        f"{len(selected_features)}"
+    )
+
+    # ========================================================
+    # 3. SEPARATE TARGET
+    # ========================================================
 
     print(
         "\n[3/6] Separating target variable..."
@@ -455,7 +675,10 @@ def run_preprocessing():
         test_df
     )
 
+    # --------------------------------------------------------
     # Remove rows with missing target
+    # --------------------------------------------------------
+
     train_valid = y_train.notna()
     validation_valid = y_validation.notna()
     test_valid = y_test.notna()
@@ -484,9 +707,9 @@ def run_preprocessing():
         test_valid
     ].reset_index(drop=True)
 
-    # --------------------------------------------------------
+    # ========================================================
     # 4. ENCODING
-    # --------------------------------------------------------
+    # ========================================================
 
     print(
         "\n[4/6] Encoding categorical variables..."
@@ -502,6 +725,10 @@ def run_preprocessing():
         X_test
     )
 
+    # --------------------------------------------------------
+    # Store final model feature names
+    # --------------------------------------------------------
+
     feature_names = (
         X_train.columns.tolist()
     )
@@ -511,9 +738,9 @@ def run_preprocessing():
         f"{len(feature_names)}"
     )
 
-    # --------------------------------------------------------
+    # ========================================================
     # 5. IMPUTATION
-    # --------------------------------------------------------
+    # ========================================================
 
     print(
         "\n[5/6] Applying training-fitted imputation..."
@@ -529,15 +756,18 @@ def run_preprocessing():
         X_test
     )
 
-    # --------------------------------------------------------
+    # ========================================================
     # 6. SAVE
-    # --------------------------------------------------------
+    # ========================================================
 
     print(
         "\n[6/6] Saving processed datasets..."
     )
 
+    # --------------------------------------------------------
     # Training
+    # --------------------------------------------------------
+
     train_processed = pd.DataFrame(
         X_train_processed,
         columns=feature_names
@@ -547,7 +777,10 @@ def run_preprocessing():
         y_train.to_numpy()
     )
 
+    # --------------------------------------------------------
     # Validation
+    # --------------------------------------------------------
+
     validation_processed = pd.DataFrame(
         X_validation_processed,
         columns=feature_names
@@ -557,7 +790,10 @@ def run_preprocessing():
         y_validation.to_numpy()
     )
 
+    # --------------------------------------------------------
     # Test
+    # --------------------------------------------------------
+
     test_processed = pd.DataFrame(
         X_test_processed,
         columns=feature_names
@@ -567,9 +803,9 @@ def run_preprocessing():
         y_test.to_numpy()
     )
 
-    # --------------------------------------------------------
-    # Save CSVs
-    # --------------------------------------------------------
+    # ========================================================
+    # SAVE CSV FILES
+    # ========================================================
 
     train_processed.to_csv(
         TRAIN_OUTPUT_PATH,
@@ -586,9 +822,10 @@ def run_preprocessing():
         index=False
     )
 
-    # --------------------------------------------------------
-    # Save validation arrays for Streamlit diagnostics
-    # --------------------------------------------------------
+    # ========================================================
+    # SAVE VALIDATION ARRAYS
+    # Used by Streamlit diagnostics
+    # ========================================================
 
     np.save(
         X_VAL_PATH,
@@ -602,9 +839,9 @@ def run_preprocessing():
         )
     )
 
-    # --------------------------------------------------------
-    # Save feature names
-    # --------------------------------------------------------
+    # ========================================================
+    # SAVE FEATURE NAMES
+    # ========================================================
 
     pd.DataFrame({
         "feature_name": feature_names
@@ -613,9 +850,9 @@ def run_preprocessing():
         index=False
     )
 
-    # --------------------------------------------------------
-    # Output information
-    # --------------------------------------------------------
+    # ========================================================
+    # OUTPUT INFORMATION
+    # ========================================================
 
     print(
         f"\n[SAVED] {TRAIN_OUTPUT_PATH}"
@@ -641,28 +878,45 @@ def run_preprocessing():
         f"[SAVED] {FEATURE_NAMES_PATH}"
     )
 
-    # --------------------------------------------------------
-    # Final summary
-    # --------------------------------------------------------
-
-    print("\n" + "=" * 70)
-    print("PREPROCESSING COMPLETED SUCCESSFULLY")
-    print("=" * 70)
+    # ========================================================
+    # FINAL SUMMARY
+    # ========================================================
 
     print(
-        f"Training rows     : {len(train_processed)}"
+        "\n" + "=" * 70
     )
 
     print(
-        f"Validation rows   : {len(validation_processed)}"
+        "PREPROCESSING COMPLETED SUCCESSFULLY"
     )
 
     print(
-        f"Test rows         : {len(test_processed)}"
+        "=" * 70
     )
 
     print(
-        f"Model features    : {len(feature_names)}"
+        f"Training rows     : "
+        f"{len(train_processed)}"
+    )
+
+    print(
+        f"Validation rows   : "
+        f"{len(validation_processed)}"
+    )
+
+    print(
+        f"Test rows         : "
+        f"{len(test_processed)}"
+    )
+
+    print(
+        f"Selected features : "
+        f"{len(selected_features)}"
+    )
+
+    print(
+        f"Model features    : "
+        f"{len(feature_names)}"
     )
 
     print(
