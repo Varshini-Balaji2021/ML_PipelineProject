@@ -2441,30 +2441,34 @@ elif stage == "7. Final Presentation":
 * **Evaluation Metrics:** RMSE, MAE, and R².
 
 ### 2. End-to-End Pipeline
-
-```text
-Raw Housing Dataset
-        ↓
+Raw Housing Data
+       ↓
 Data Ingestion
-        ↓
+       ↓
+Data Understanding & EDA
+       ↓
+Train / Validation / Test Split
+       ↓
 Feature Engineering
-        ↓
-Targeted Feature Selection
-        ↓
-Train / Validation Split
-        ↓
-Missing-Value Imputation
-        ↓
+       ↓
+Feature Selection
+       ↓
+Preprocessing
+   ├─ Target Separation
+   ├─ Categorical Encoding
+   └─ Missing-Value Imputation
+       ↓
 Model Training
-        ↓
+       ↓
 Model Comparison
-        ↓
+       ↓
 Best Model Selection
-        ↓
-Validation Diagnostics
-        ↓
+       ↓
+Model Evaluation
+       ↓
+Model Persistence
+       ↓
 Reports & Export
-```
 
 ### 3. Models Evaluated
 
