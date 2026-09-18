@@ -1,6 +1,6 @@
 {
     "registry_version": "2.0",
-    "generated_at": "2026-09-15T22:37:16.170151",
+    "generated_at": "2026-09-18T15:55:43.715269",
     "project": {
         "name": "California House Prices",
         "problem_type": "Regression",
@@ -13,19 +13,8 @@
         "total_columns": 10
     },
     "feature_store": {
-        "selected_features": [
-            "median_income",
-            "housing_median_age",
-            "total_rooms",
-            "total_bedrooms",
-            "population",
-            "households",
-            "ocean_proximity",
-            "rooms_per_household",
-            "population_per_household",
-            "bedrooms_per_household"
-        ],
-        "feature_count": 10
+        "selected_features": [],
+        "feature_count": 0
     },
     "model_registry": {
         "best_model": "C:\\Users\\varsh\\OneDrive\\Attachments\\Desktop\\ML_Pipelineproject\\models\\trained\\best_model.joblib",

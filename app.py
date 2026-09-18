@@ -634,7 +634,7 @@ else "No selected features recorded."}
 
 st.title("🏠 California House Prices Workbench")
 st.caption(
-    "End-to-End Machine Learning Regression Platform"
+    "California Housing Machine Learning Regression Platform"
 )
 st.divider()
 
@@ -650,9 +650,8 @@ stage = st.sidebar.radio(
         "2. Data Understanding & Profiling",
         "3. Feature Engineering & Model Training",
         "4. Model Evaluation & Results",
-        "5. Workflow Orchestration",
-        "6. Reports & Export",
-        "7. Final Presentation",
+        "5. Reports & Export",
+        "6. Final Presentation",
     ],
 )
 
@@ -2089,260 +2088,11 @@ elif stage == "4. Model Evaluation & Results":
         st.info("Test prediction output is not available yet. Run Final Test Evaluation first.")
 
 
-# STAGE 5
-# ============================================================
-
-elif stage == "5. Workflow Orchestration":
-
-    st.header(
-        "⚙️ Workflow Orchestration Control Center"
-    )
-
-    st.write(
-        "Run the complete pipeline or execute individual "
-        "stages in the correct dependency order."
-    )
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-
-        st.subheader(
-            "⚡ Complete End-to-End Pipeline"
-        )
-
-        st.caption(
-            "Ingestion → Feature Engineering → "
-            "Recommended Feature Store → Preprocessing → Training"
-        )
-
-        if st.button(
-            "Run Full Pipeline"
-        ):
-
-            logs = []
-
-            with st.spinner(
-                "Executing complete workflow..."
-            ):
-
-                # ------------------------------------------
-                # 1. INGESTION
-                # ------------------------------------------
-
-                success, output = (
-                    run_python_script(
-                        INGEST_SCRIPT_PATH
-                    )
-                )
-
-                logs.append(
-                    "===== 1. INGESTION =====\n"
-                    + output
-                )
-
-                if not success:
-
-                    st.error(
-                        "❌ Ingestion failed. "
-                        "Pipeline stopped."
-                    )
-
-                else:
-
-                    clear_data_cache()
-
-                    # --------------------------------------
-                    # 2. FEATURE ENGINEERING
-                    # --------------------------------------
-
-                    success, output = (
-                        run_python_script(
-                            FEATURE_ENGINEERING_SCRIPT_PATH
-                        )
-                    )
-
-                    logs.append(
-                        "===== 2. FEATURE ENGINEERING =====\n"
-                        + output
-                    )
-
-                    if not success:
-
-                        st.error(
-                            "❌ Feature engineering failed. "
-                            "Pipeline stopped."
-                        )
-
-                    else:
-
-                        clear_data_cache()
-
-                        engineered_df = (
-                            load_engineered_data()
-                        )
-
-                        try:
-
-                            recommended = [
-                                feature
-                                for feature in RECOMMENDED_FEATURES
-                                if feature in engineered_df.columns
-                            ]
-
-                            save_feature_store(
-                                engineered_df,
-                                recommended,
-                            )
-
-                            logs.append(
-                                "===== 3. FEATURE STORE =====\n"
-                                f"Saved {len(recommended)} "
-                                "recommended features."
-                            )
-
-                            # --------------------------------
-                            # 3. PREPROCESSING
-                            # --------------------------------
-
-                            success, output = (
-                                run_python_script(
-                                    PREPROCESS_SCRIPT_PATH
-                                )
-                            )
-
-                            logs.append(
-                                "===== 4. PREPROCESSING =====\n"
-                                + output
-                            )
-
-                            if not success:
-
-                                st.error(
-                                    "❌ Preprocessing failed. "
-                                    "Pipeline stopped."
-                                )
-
-                            else:
-
-                                # ----------------------------
-                                # 4. TRAINING
-                                # ----------------------------
-
-                                success, output = (
-                                    run_python_script(
-                                        TRAIN_SCRIPT_PATH
-                                    )
-                                )
-
-                                logs.append(
-                                    "===== 5. MODEL TRAINING =====\n"
-                                    + output
-                                )
-
-                                if success:
-
-                                    st.success(
-                                        "✅ Complete pipeline "
-                                        "executed successfully!"
-                                    )
-
-                                    clear_data_cache()
-
-                                else:
-
-                                    st.error(
-                                        "❌ Model training failed."
-                                    )
-
-                        except Exception as exc:
-
-                            st.error(
-                                f"❌ Feature-store creation failed: {exc}"
-                            )
-
-            st.session_state.pipeline_output = (
-                "\n\n".join(logs)
-            )
-
-    with col2:
-
-        st.subheader(
-            "🎯 Stage-Wise Orchestration"
-        )
-
-        selected_stage_op = st.selectbox(
-            "Select stage:",
-            [
-                "Ingestion",
-                "Feature Engineering",
-                "Preprocessing",
-                "Training",
-            ],
-        )
-
-        if st.button(
-            f"Execute {selected_stage_op}"
-        ):
-
-            script_map = {
-                "Ingestion": INGEST_SCRIPT_PATH,
-                "Feature Engineering":
-                    FEATURE_ENGINEERING_SCRIPT_PATH,
-                "Preprocessing":
-                    PREPROCESS_SCRIPT_PATH,
-                "Training":
-                    TRAIN_SCRIPT_PATH,
-            }
-
-            script_path = script_map[
-                selected_stage_op
-            ]
-
-            with st.spinner(
-                f"Running {selected_stage_op}..."
-            ):
-
-                success, output = (
-                    run_python_script(
-                        script_path
-                    )
-                )
-
-            st.session_state.pipeline_output = output
-
-            if success:
-
-                st.success(
-                    f"✅ {selected_stage_op} completed successfully."
-                )
-
-                clear_data_cache()
-
-            else:
-
-                st.error(
-                    f"❌ {selected_stage_op} failed."
-                )
-
-    if st.session_state.pipeline_output:
-
-        st.divider()
-
-        st.subheader(
-            "Execution Log"
-        )
-
-        st.code(
-            st.session_state.pipeline_output
-        )
-
-
 # ============================================================
 # STAGE 6
 # ============================================================
 
-elif stage == "6. Reports & Export":
+elif stage == "5. Reports & Export":
 
     st.header(
         "📁 Reports, Registry & Artifact Export"
@@ -2425,7 +2175,7 @@ elif stage == "6. Reports & Export":
 # STAGE 7
 # ============================================================
 
-elif stage == "7. Final Presentation":
+elif stage == "6. Final Presentation":
 
     st.header(
         "🎓 Final Academic Presentation & Architecture"
@@ -2433,66 +2183,37 @@ elif stage == "7. Final Presentation":
 
     st.markdown(
         """
-### 1. Problem Statement & Context
+### Problem Statement & Context
 
 * **Objective:** Predict California median housing values using demographic and spatial variables.
 * **Problem Type:** **Supervised Regression**
 * **Target:** `median_house_value`
 * **Evaluation Metrics:** RMSE, MAE, and R².
 
-### 2. End-to-End Pipeline
-Raw Housing Data
-       ↓
-Data Ingestion
-       ↓
-Data Understanding & EDA
-       ↓
-Train / Validation / Test Split
-       ↓
-Feature Engineering
-       ↓
-Feature Selection
-       ↓
-Preprocessing
-   ├─ Target Separation
-   ├─ Categorical Encoding
-   └─ Missing-Value Imputation
-       ↓
-Model Training
-       ↓
-Model Comparison
-       ↓
-Best Model Selection
-       ↓
-Model Evaluation
-       ↓
-Model Persistence
-       ↓
-Reports & Export
-
-### 3. Models Evaluated
+### Models Evaluated
 
 * Ridge Regression — baseline
 * Random Forest Regressor
 * Gradient Boosting Regressor
 
-### 4. Validation Diagnostics
+### Validation Diagnostics
 
 * Actual vs Predicted
 * Residuals vs Predicted
 * Residual Distribution
-* Validation RMSE
-* Validation MAE
-* Validation R²
 
-### 5. Workflow Orchestration
-
-The full workflow executes in dependency order:
-
-**Ingestion → Feature Engineering → Feature Store → Preprocessing → Training**
-"""
+        """
     )
 
     st.success(
         "✅ Regression workbench is ready for academic presentation."
+    )
+
+    st.divider()
+    st.subheader("📌 End-to-End ML Pipeline")
+
+    st.image(
+        "assets/end_ml_pipeline.png",
+        caption="End-to-End ML Pipeline — California Housing Price Prediction (Regression)",
+        use_container_width=True
     )
